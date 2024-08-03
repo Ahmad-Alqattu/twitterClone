@@ -1,0 +1,68 @@
+    {% extends "./base.peb" %}
+
+        {%  set listOfTweets = listOfTweets %}
+        {%  set erros = erros %}
+
+    {% block content %}
+    <div class="container mt-5">
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+            {{ if erros is not empty   }}
+            {{ endIf }}
+            {{ if erros contains "passordError"   }}
+            <div class='alert alert-danger' hx-swap-oob='true'>Username already exists {{ erros.passordError }}</div>
+            {{ endIf }}
+
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 class="mb-4">Sign Up</h2>
+                <div id="error-message"></div> <!-- Placeholder for error messages -->
+                <form action="/signup" method="post" hx-post="/signup" hx-swap="outerHTML">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                        <div class="invalid-feedback">
+                            Passwords do not match.
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Up</button>
+                </form>
+                <p class="mt-3">Already have an account? <a href="/login">Login</a></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password !== confirmPassword) {
+                event.preventDefault();
+                document.getElementById('confirmPassword').classList.add('is-invalid');
+                document.getElementById('confirmPassword').nextElementSibling.textContent = 'Passwords do not match.';
+            }
+        });
+
+        document.addEventListener('htmx:beforeSwap', function(event) {
+            // If the incoming content contains an error alert, place it into the error message container
+            if (event.detail.xhr.status === 400) {
+                const errorMsg = event.detail.xhr.response;
+                document.getElementById('error-message').innerHTML = errorMsg;
+                event.detail.shouldSwap = false;
+            }
+        });
+    </script>
+    {% endblock %}

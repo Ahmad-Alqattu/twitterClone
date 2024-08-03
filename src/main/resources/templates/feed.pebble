@@ -1,0 +1,50 @@
+<!-- src/main/resources/templates/feed.pebble -->
+{% extends "layout.pebble" %}
+
+    <div class="container mt-3">
+        <!-- Navigation bar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="/">MyApp</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <div id="tweet-container">
+            {% for tweet in tweets %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="media">
+                            <img src="{{ tweet.user.profile_photo_url }}" class="mr-3 rounded-circle" alt="{{ tweet.user.username }}" width="50">
+                            <div class="media-body">
+                                <h5 class="mt-0">{{ tweet.user.username }}</h5>
+                                <p>{{ tweet.content }}</p>
+                                {% if tweet.media_url %}
+                                    <img src="{{ tweet.media_url }}" class="img-fluid" alt="Media content">
+                                {% endif %}
+                                <p><small class="text-muted">{{ tweet.created_at }}</small></p>
+                                <p>
+                                    <button class="btn btn-light">Like ({{ tweet.like_count }})</button>
+                                    <button class="btn btn-light">Retweet ({{ tweet.retweet_count }})</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Button for loading more tweets -->
+        <div id="load-more-container">
+            <button hx-get="/load-more-tweets" hx-trigger="click" hx-target="#tweet-container" hx-swap="beforeend" class="btn btn-primary">
+                Load More
+            </button>
+        </div>
+    </div>

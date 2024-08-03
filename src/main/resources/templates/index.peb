@@ -1,0 +1,12 @@
+    {% extends "base.peb" %}
+        {% block title %}Home{% endblock %}
+    {% block content %}
+<div id="tweet-container">
+    {% include "tweets.peb" %}
+</div>
+<div id="load-more-container">
+    <button hx-get="/load-more-tweets?offset=10" hx-trigger="click" hx-target="#tweet-container" hx-swap="beforeend" class="btn btn-primary">
+        Load More
+    </button>
+</div>
+{% endblock %}
