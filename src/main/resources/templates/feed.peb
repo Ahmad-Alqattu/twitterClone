@@ -1,0 +1,28 @@
+    {% extends "./base.peb" %}
+
+    {% block content %}
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <h2 class="mb-4">Your Feed</h2>
+                {% include "./partials/create_tweet.peb" %}
+
+                <div id="tweet-list">
+                        {% include "./partials/tweet-list.peb" %}
+                </div>
+
+                {% if hasMoreTweets %}
+                    <div class="text-center mt-4">
+                        <button class="btn btn-primary"
+                                hx-get="/feed/load-more?offset={{ tweets | length }}"
+                                hx-trigger="click, revealed"
+                                hx-target="#tweet-list"
+                                hx-swap="beforeend">
+                            Load More
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endblock %}

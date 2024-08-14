@@ -1,15 +1,210 @@
-    {% extends "base.peb" %}
-        {% block title %}Profile{% endblock %}
+    {% extends "./base.peb" %}
+
     {% block content %}
-<h1>{{ user.username }}</h1>
-<div id="tweets">
-    {% for tweet in tweets %}
-    <div class="card mt-3">
-        <div class="card-body">
-            <p class="card-text">{{ tweet.content }}</p>
-            <p class="card-text"><small class="text-muted">{{ tweet.timestamp }}</small></p>
+    <div class="profile-container">
+        <!-- Profile Header (Wallpaper) -->
+        <div class="profile-header" style="background-image: url('data:image/jpeg;base64,{{wallpaperPicBase64}}');">
+                {% if user.id == currentUser %}
+                <label class="change-wallpaper-btn">
+                    Change Wallpaper
+                </label>
+                {% endif %}
         </div>
+
+        <!-- Profile Information (Name, Email, Follow Button) -->
+        <div class="profile-info-section">
+            <div class="profile-info">
+                <div class="profile-pic-container">
+                    <img src="data:image/jpeg;base64,{{profilePicBase64}}" alt="{{ user.username }}" class="profile-pic">
+                    {% if user.id == currentUser %}
+                        <label class="change-profile-pic-btn" style="background-image: url('/img/changePic.png');">
+                        </label>
+                    {% endif %}
+                </div>
+                <div class="profile-details">
+                    <h1>{{ user.username }}</h1>
+                    <p>{{ user.email }}</p>
+                </div>
+                <div class="profile-actions">
+                        {% if user.id == currentUser %}
+                        <button class="edit-profile-btn">Edit Profile</button>
+                        {% else %}
+                        {% if isFollowing %}
+                        <form action="/profile/{{ user.username }}/unfollow" method="post">
+
+                            <button class="unfollow-btn">Unfollow</button>
+                        </form>
+                            {% else %}
+                        <form action="/profile/{{ user.username }}/follow" method="post">
+
+                            <button class="follow-btn">Follow</button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Bio and Joined Date -->
+            <div class="profile-bio">
+                <!-- Bio Text -->
+                <div id="bio-text" class="bio-text">
+                    <p>{{ user.bio }}</p>
+{#                    {% if user.id == currentUser %}#}
+{#                        <img src="/img/edit.png" class="edit-bio-img" onclick="showBioEditForm()"> <!-- Image button for editing bio -->#}
+{#                    {% endif %}#}
+                </div>
+
+{#                <!-- Edit Bio Form (Initially Hidden) -->#}
+{#                <div id="bio-form" class="bio-form" style="display:none;">#}
+{#                    <form action="/profile/update" method="POST"enctype="multipart/form-data">#}
+{#                        <textarea name="bio" placeholder="Update your bio...">{{ user.bio }}</textarea>#}
+{#                        <button type="submit">Save</button>#}
+{#                        <button type="button" onclick="cancelBioEdit()">Cancel</button>#}
+{#                    </form>#}
+{#                </div>#}
+
+            <p class="joined-date">Joined {{ user.createdAt | date("d/M/Y") }}</p> <!-- Date formatted as day month year -->
+            </div>
+        </div>
+
+
+        <!-- Tweets Section -->
+        <div class="tweets-section">
+            <h2>Tweets</h2>
+            {% include "./partials/tweet-list.peb" %}
+        </div>
+        <!-- Update Profile Modal -->
+        <!-- Update Profile Modal -->
+        <div id="updateProfileModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Profile</h5>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/profile/update" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="bio">Bio</label>
+                                <textarea class="form-control" name="bio" id="bio">{{ user.bio }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePic">Profile Picture</label>
+                                <input type="file" class="form-control-file" accept="image/*" name="profilePic" id="profilePic">
+                            </div>
+                            <div class="form-group">
+                                <label for="wallpaperPic">Wallpaper</label>
+                                <input type="file" class="form-control-file" accept="image/*" name="wallpaperPic" id="wallpaperPic">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary close">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Picture Modal -->
+        <div id="profilePicModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Change Profile Picture</h5>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/profile/update" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <input type="file" class="form-control-file" accept="image/*" name="profilePic" id="profilePic">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary close">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallpaper Modal -->
+        <div id="wallpaperPicModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Change Wallpaper</h5>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/profile/update" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <input type="file" class="form-control-file" accept="image/*" name="wallpaperPic" id="wallpaperPic">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary close">Close</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </div>
-    {% endfor %}
-</div>
-{% endblock %}
+        <script>
+        //     document.getElementById("bio-text").style.display = "none";
+        //     document.getElementById("bio-form").style.display = "block";
+        // }
+        //
+        // function cancelBioEdit() {
+        //     document.getElementById("bio-form").style.display = "none";
+        //     document.getElementById("bio-text").style.display = "flex";
+        // }
+
+        // Get the modal elements
+        var profileModal = document.getElementById("updateProfileModal");
+        var profilePicModal = document.getElementById("profilePicModal");
+        var wallpaperPicModal = document.getElementById("wallpaperPicModal");
+
+        // Get the button elements that open the modals
+        var editProfileBtn = document.querySelector(".edit-profile-btn");
+        var changeProfilePicBtn = document.querySelector(".change-profile-pic-btn");
+        var changeWallpaperBtn = document.querySelector(".change-wallpaper-btn");
+
+        // Get the <span> elements that close the modals
+        var closeButtons = document.getElementsByClassName("close");
+
+        // When the user clicks the button, open the respective modal
+        editProfileBtn.onclick = function() {
+            profileModal.style.display = "block";
+        }
+
+        changeProfilePicBtn.onclick = function() {
+            profilePicModal.style.display = "block";
+        }
+
+        changeWallpaperBtn.onclick = function() {
+            wallpaperPicModal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        Array.from(closeButtons).forEach(function(span) {
+            span.onclick = function() {
+                this.closest('.modal').style.display = "none";
+            }
+        });
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+
+
+        </script>
+    {% endblock %}

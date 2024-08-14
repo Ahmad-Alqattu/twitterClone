@@ -1,0 +1,6 @@
+
+    <img src="/img/{{ tweet.likedByMe ? 'like_full.png' : 'like.png' }}"
+         width="20" height="20"
+         alt="Like">
+    Like (<span class="like-count" hx-get="/tweet/{{ tweet.id }}/likers" hx-trigger="click">{{ tweet.likeCount }}</span>)
+

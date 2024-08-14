@@ -5,13 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+
+
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <img src='/img/logo.png' id="img" alt="" width="40" height="40" class="logo">
         <a class="navbar-brand" href="/">Twitter Clone</a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                {% if session.get('currentUser') %}
+                {% if session.get('userId') %}
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>
                 </li>

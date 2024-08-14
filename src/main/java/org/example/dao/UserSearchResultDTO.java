@@ -4,5 +4,4 @@ public class UserSearchResultDTO {
     private int id;
     private String username;
     private String profilePhotoUrl;
-    // Add getters and setters
 }

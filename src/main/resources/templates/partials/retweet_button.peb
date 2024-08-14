@@ -1,0 +1,5 @@
+
+    <img src="/img/{{ tweet.retweetedByMe ? 'retweet_full.png' : 'retweet.png' }}"
+         width="20" height="20"
+         alt="Retweet">
+    Retweet (<span class="retweet-count" hx-get="/tweet/{{ tweet.id }}/retweeters" hx-trigger="click">{{ tweet.retweetCount }}</span>)

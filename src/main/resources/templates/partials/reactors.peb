@@ -1,0 +1,8 @@
+<ul>
+        {% for user in reactors %}
+        <li>
+            <img src="{{ user.profilePhotoUrl }}" class="rounded-circle" width="30" height="30" alt="{{ user.username }}">
+            {{ user.username }}
+        </li>
+        {% endfor %}
+</ul>

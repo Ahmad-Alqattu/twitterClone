@@ -1,0 +1,40 @@
+<div class="card mb-3">
+    <div class="card-body" style="background-color: #f8f9fa;"> <!-- Light background color -->
+        <form id="create-tweet-form" hx-post="/tweet/create"
+              hx-target="#tweet-list"
+              hx-swap="beforeend" enctype="multipart/form-data">
+            <div class="mb-3">
+                <textarea class="form-control" name="content" placeholder="What's happening?" rows="3"
+                          style="border: none; background-color: #e9ecef;" required></textarea> <!-- Remove border and light background -->
+            </div>
+            <div class="mb-3">
+                <input type="file" class="form-control-file" id="imageInput" name="image" accept="image/*"
+                       style="display: none;">
+                <label for="imageInput" class="btn btn-outline-secondary" style="display: block; background-color: #e9ecef; border: 1px solid #ced4da; color: #495057;">add photo</label>
+                <img id="imagePreview" src="#" alt="Image preview" style="display: none; max-width: 100%; margin-top: 10px;">
+            </div>
+            <button type="submit" class="btn btn-primary">Tweet</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('imagePreview');
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+    });
+</script>

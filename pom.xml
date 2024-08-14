@@ -10,6 +10,23 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.7.1</version>
+                <configuration>
+                    <url>jdbc:postgresql://127.0.0.1:5432/TwitterDB</url>
+                    <user>postgres</user>
+                    <password>master123</password>
+                    <locations>
+                        <location>./src/main/resources/db/migration</location>
+                    </locations>
+                    <schemas>
+                        <schema>public</schema>
+                    </schemas>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
@@ -34,6 +51,16 @@
 <dependencies>
 
     <!-- Javalin -->
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+        <version>10.17.0</version>
+    </dependency>
+    <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-database-postgresql</artifactId>
+        <version>10.7.1</version>
+    </dependency>
 
     <dependency>
         <groupId>io.javalin</groupId>
@@ -136,16 +163,6 @@
         <groupId>io.pebbletemplates</groupId>
         <artifactId>pebble</artifactId>
         <version>3.1.5</version>
-    </dependency>
-    <dependency>
-        <groupId>org.thymeleaf</groupId>
-        <artifactId>thymeleaf</artifactId>
-        <version>3.0.15.RELEASE</version> <!-- or the latest version -->
-    </dependency>
-    <dependency>
-        <groupId>org.thymeleaf</groupId>
-        <artifactId>thymeleaf-spring5</artifactId>
-        <version>3.0.15.RELEASE</version> <!-- or the latest version -->
     </dependency>
 
 

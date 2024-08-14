@@ -10,9 +10,12 @@ import io.javalin.http.Context;
 import java.util.List;
 import java.util.Map;
 
-// src/main/java/com/twitterclone/controllers/FeedController.java
+import static io.javalin.rendering.template.TemplateUtil.model;
+
+
 public class FeedController {
     private final TweetDAO tweetDAO;
+    private static final int TWEETS_PER_PAGE = 5;
 
     @Inject
     public FeedController(TweetDAO tweetDAO) {
@@ -20,32 +23,35 @@ public class FeedController {
     }
 
     public void registerRoutes(Javalin app) {
-        app.get("/feed", this::showFeed);
-        app.get("/feed/load-more-tweets", this::loadMoreTweets);
+        app.get("/feed", this::renderFeed);
+        app.get("/", this::renderFeed);
+  app.get("/feed/load-more", this::loadMoreTweets);
     }
 
-    private void showFeed(Context ctx) {
-        User user = ctx.sessionAttribute("userId");
-        if (user == null) {
+    private void renderFeed(Context ctx) {
+        Integer userId = ctx.sessionAttribute("userId");
+        if (userId == null) {
             ctx.redirect("/login");
             return;
         }
-
-        List<Tweet> tweets = tweetDAO.getTimelineForUser(user.getId(), 20, 0);
-        ctx.render("./templates/tweets.peb", Map.of("tweets", tweets));
+        List<Tweet> initialTweets = tweetDAO.getTimelineForUser(userId, TWEETS_PER_PAGE, 0);
+        System.out.println(initialTweets.size());
+        ctx.render("templates/feed.peb", model(
+                "tweets", initialTweets,
+                "hasMoreTweets", initialTweets.size() == TWEETS_PER_PAGE
+        ));
     }
 
     private void loadMoreTweets(Context ctx) {
-        User user = ctx.sessionAttribute("user");
-        int offset;
-        try {
-            String offsetParam = ctx.queryParam("offset");
-            offset = offsetParam != null ? Integer.parseInt(offsetParam) : 0;
-        } catch (NumberFormatException e) {
-            // Log the error
-            offset = 0; // Use a default value
-        }
-        List<Tweet> tweets = tweetDAO.getTimelineForUser(user.getId(), 20, offset);
-        ctx.render("templates/tweets.peb", Map.of("tweets", tweets));
+        int userId = ctx.sessionAttribute("userId");
+        int offset = ctx.queryParamAsClass("offset", Integer.class).getOrDefault(0);
+
+        List<Tweet> moreTweets = tweetDAO.getTimelineForUser(userId, TWEETS_PER_PAGE, offset);
+
+        ctx.render("templates/partials/tweet-list.peb", model(
+                "tweets", moreTweets,
+                "hasMoreTweets", moreTweets.size() == TWEETS_PER_PAGE,
+                "nextOffset", offset + TWEETS_PER_PAGE
+        ));
     }
 }

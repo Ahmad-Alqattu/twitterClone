@@ -1,0 +1,71 @@
+    {% for tweet in tweets %}
+    <div class="card mb-3 tweets-list" style="background-color: #f8f9fa;">
+        <div class="card-body">
+            {% if tweet.retweetedByUser %}
+                <p class="text-muted"><a class="user-link"  href="/profile/{{ tweet.retweetedByUser }}">{{ tweet.retweetedByUser }}</a> retweeted this</p>
+            {% endif %}
+            <div class="d-flex align-items-center mb-2">
+                <a href="/profile/{{ tweet.user.username }}"> <img src="{{ tweet.user.profilePhotoUrl }}"  class="rounded-circle me-2" width="40" height="40" alt="{{ tweet.user.username }}">
+                </a><h5 class="card-title mb-0"><a class="user-link" href="/profile/{{ tweet.user.username }}">{{ tweet.user.username }}</a></h5>
+            </div>
+            <p class="card-text">{{ tweet.content }}</p>
+            {% if tweet.imageUrl %}
+                <img src="{{ tweet.imageUrl }}" class="img-fluid mb-2 " alt="Tweet image"style="border-radius: 20px;">
+            {% endif %}
+
+            <p class="card-text"><small class="text-muted">Posted on {{ tweet.createdAt | date("yyyy-MM-dd HH:mm:ss") }}</small></p>
+            <button id="tweet-{{ tweet.id }}" class="btn btn-sm btn-outline-primary like-btn"
+                    hx-post="/tweet/{{ tweet.id }}/like"
+                    hx-target="this"
+                    hx-swap="innerHTML">
+                    {% include "./like_button.peb" with { "tweet": tweet } %}
+            </button>
+            <button class="btn btn-sm btn-outline-secondary retweet-btn"
+                    hx-post="/tweet/{{ tweet.id }}/retweet"
+                    hx-swap="innerHTML">
+                    {% include "./retweet_button.peb" with { "tweet": tweet } %}
+            </button>
+            {% include "./coments.peb" with { "tweet": tweet } %}
+
+        </div>
+    </div>
+    {% endfor %}
+
+        {% if hasMoreTweets %}
+        <div hx-get="/feed/load-more?offset={{ tweets|length }}"
+             hx-trigger="revealed"
+             hx-target="#tweet-list"
+             hx-swap="beforeend">
+        </div>
+        {% endif %}
+
+    <div id="interactionModal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Interactions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.elt.classList.contains('like-btn') || event.detail.elt.classList.contains('retweet-btn')) {
+                // Update the button after like/retweet action
+                event.detail.elt.innerHTML = event.detail.xhr.response;
+            }
+        });
+
+        document.body.addEventListener('htmx:afterOnLoad', function(event) {
+            if (event.detail.elt.classList.contains('like-count') || event.detail.elt.classList.contains('retweet-count')) {
+                // Show modal with likers/retweeters
+                var modal = new bootstrap.Modal(document.getElementById('interactionModal'));
+                document.querySelector('#interactionModal .modal-body').innerHTML = event.detail.xhr.response;
+                modal.show();
+            }
+        });
+    </script>

@@ -2,6 +2,7 @@ package org.example;
 
 
 import io.javalin.rendering.template.JavalinPebble;
+import jakarta.servlet.MultipartConfigElement;
 import org.example.config.ConfigModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -25,8 +26,11 @@ public class App {
             Javalin app = Javalin.create(javalinConfig -> {
                 javalinConfig.staticFiles.add("/public");
                 javalinConfig.fileRenderer(new JavalinPebble());
-            }).start(config.getInt("server.port"));
 
+            }).start(config.getInt("server.port"));
+            app.before(ctx -> {
+                ctx.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/public/uploads"));
+            });
             logger.info("Javalin server started on port: {}", config.getInt("server.port"));
 
             registerRoutes(app, injector);

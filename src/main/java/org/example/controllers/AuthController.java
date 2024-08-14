@@ -32,8 +32,9 @@ public class AuthController {
     }
 
     private void renderLoginPage(Context ctx) {
+
         Map<String, Object> model = new HashMap<>();
-        ctx.render("templates/login.peb", model);
+        ctx.render("./templates/login.peb", model);
     }
 
     private void handleLogin(Context ctx) {
@@ -43,13 +44,12 @@ public class AuthController {
         User user = userDAO.findByUsername(username);
         if (user != null && BCrypt.checkpw(password, user.getPasswordHash())) {
             ctx.sessionAttribute("userId", user.getId());
-            ctx.header("HX-Redirect", "/feed");
+            ctx.redirect("/feed");
         } else {
-            ctx.status(401);
-            ctx.html("<div class='alert alert-danger'>Invalid username or password</div>");
-            ctx.render("path to the sign up form / any pebble page",
-                    model("isThereErrors",true,
-                            "listOfTweets", new LinkedList<String>()));
+            ctx.render("templates/login.peb", model(
+                    "isThereErrors", true,
+                    "errorMessage", "Invalid username or password"
+            ));
         }
     }
 
@@ -66,13 +66,13 @@ public class AuthController {
         String password = ctx.formParam("password");
 
         if (userDAO.findByUsername(username) != null) {
-            ctx.status(400);  // Set status to indicate a client error
-            ctx.html("<div class='alert alert-danger' hx-swap-oob='true'>Username already exists</div>");
-            System.out.println("d");
-
+            ctx.render("templates/signup.peb", model(
+                    "isThereErrors", true,
+                    "errorMessage", "Username already exists",
+                    "email", email  // Preserve the email input
+            ));
             return;
         }
-        System.out.println("s");
 
         User newUser = new User();
         newUser.setUsername(username);

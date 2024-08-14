@@ -8,6 +8,7 @@
     import com.google.inject.Singleton;
     import com.typesafe.config.Config;
     import com.typesafe.config.ConfigFactory;
+    import org.flywaydb.core.Flyway;
     import org.jdbi.v3.core.Jdbi;
 
 
@@ -23,6 +24,14 @@
         @Provides
         @Singleton
         public Jdbi provideJdbi(Config config) {
+            Flyway flyway = Flyway.configure()
+                    .dataSource("jdbc:postgresql://127.0.0.1:5432/TwitterDB", "postgres", "master123")
+                    .locations("classpath:db/migration")
+                    .table("flyway_schema_history")
+                    .load();
+
+            flyway.migrate();
+
             return Jdbi.create(
                     config.getString("database.url"),
                     config.getString("database.username"),

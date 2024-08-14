@@ -1,20 +1,32 @@
 package org.example.models;
 
-// src/main/java/com/twitterclone/models/Tweet.java
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
+@AllArgsConstructor
 public class Tweet {
     private int id;
     private int userId;
     private String content;
     private LocalDateTime createdAt;
-    private User user; // Associated user object
-    private String mediaUrl;
+    private User user;
     private int likeCount;
     private int retweetCount;
+    private byte[] ImageData;
+    private Boolean likedByMe;
+    private Boolean retweetedByMe;
+    private List<Comment> Comments;
+    private String retweetedByUser;
+
+
+
+    public Tweet() {
+
+    }
 
 
 }
