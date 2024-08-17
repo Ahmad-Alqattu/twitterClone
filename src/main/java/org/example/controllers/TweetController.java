@@ -1,71 +1,70 @@
 package org.example.controllers;
 
-import org.example.dao.TweetDAO;
+import io.javalin.http.UploadedFile;
 import org.example.models.Comment;
 import org.example.models.Tweet;
 import org.example.models.User;
+import org.example.services.TweetService;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import org.example.services.UserService;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static io.javalin.rendering.template.TemplateUtil.model;
-
 public class TweetController {
-    private final TweetDAO tweetDAO;
+    private final TweetService tweetService;
 
     @Inject
-    public TweetController(TweetDAO tweetDAO) {
-        this.tweetDAO = tweetDAO;
+    public TweetController(TweetService tweetService) {
+        this.tweetService = tweetService;
     }
 
     public void registerRoutes(Javalin app) {
         app.post("/tweet/{id}/like", this::toggleLike);
         app.get("/tweet/{id}/likers", this::getLikers);
-
         app.post("/tweet/{id}/retweet", this::toggleRetweet);
         app.get("/tweet/{id}/retweeters", this::getRetweeters);
         app.post("/tweet/{id}/comment", this::addComment);
-
+        app.post("/tweet/create", this::createTweet);
+        app.post("/tweet/{id}/delete", this::deleteTweet);
     }
 
-    public void toggleLike(Context ctx) {
+    private void toggleLike(Context ctx) {
         int tweetId = Integer.parseInt(ctx.pathParam("id"));
         int userId = ctx.sessionAttribute("userId");
-
-        if (tweetDAO.isLikedByMe(tweetId,userId)) {
-            tweetDAO.unlike(userId, tweetId);
-        } else {
-            tweetDAO.like(userId, tweetId);
-        }
-
-        Tweet tweet = tweetDAO.getTweetById(tweetId,userId);
+        tweetService.likeTweet(userId, tweetId);
+        Tweet tweet = tweetService.getTweetById(tweetId, userId);
         ctx.render("./templates/partials/like_button.peb", Map.of("tweet", tweet));
     }
 
-    public void getLikers(Context ctx) {
+    private void deleteTweet(Context ctx) {
         int tweetId = Integer.parseInt(ctx.pathParam("id"));
-        List<User> likers = tweetDAO.likers(tweetId);
+        boolean success = tweetService.deleteTweet(tweetId);
+
+        if (success) {
+            ctx.status(204);  // No Content response if successful
+        } else {
+            ctx.status(404).result("Tweet not found");
+        }
+    }
+
+    private void getLikers(Context ctx) {
+        int tweetId = Integer.parseInt(ctx.pathParam("id"));
+        List<User> likers = tweetService.getLikers(tweetId);
         ctx.render("./templates/partials/reactors.peb", Map.of("reactors", likers));
     }
 
-    public void toggleRetweet(Context ctx) {
+    private void toggleRetweet(Context ctx) {
         int tweetId = Integer.parseInt(ctx.pathParam("id"));
         int userId = ctx.sessionAttribute("userId");
-        Tweet tweet = tweetDAO.getTweetById(tweetId,userId);
-
-        if (tweetDAO.isRetweetedByMe(tweetId,userId)) {
-            tweetDAO.unretweet(userId, tweetId);
-        } else {
-            tweetDAO.retweet(userId, tweetId);
-        }
-
-        tweet = tweetDAO.getTweetById(tweetId,userId);
+        tweetService.retweet(userId, tweetId);
+        Tweet tweet = tweetService.getTweetById(tweetId, userId);
         ctx.render("./templates/partials/retweet_button.peb", Map.of("tweet", tweet));
     }
+
     private void addComment(Context ctx) {
         int tweetId = Integer.parseInt(ctx.pathParam("id"));
         String content = ctx.formParam("content");
@@ -76,38 +75,38 @@ public class TweetController {
             return;
         }
 
-        Comment comment = tweetDAO.addComment(tweetId, userId, content);
-        ctx.contentType("text/html");
-        ctx.result(renderCommentHtml(comment));
+        Comment comment = tweetService.addComment(tweetId, userId, content);
+        ctx.render("./templates/partials/comments.peb", Map.of("comment", comment));
     }
 
-    private String renderCommentHtml(Comment comment) {
-        return String.format(
-                "<div class=\"comment mb-2 d-flex align-items-center\">" +
-                        "<img src=\"%s\" class=\"rounded-circle me-2\" width=\"30\" height=\"30\" alt=\"%s\">" +
-                        "<p class=\"mb-0\"><strong>%s:</strong> %s</p>" +
-                        "</div>"+
-                "    <form hx-post=\"/tweet/{{ tweet.id }}/comment\" hx-swap=\"delete\">\n" +
-                        "        <input type=\"text\" name=\"content\" class=\"form-control mb-2\" placeholder=\"Add a comment\" required>\n" +
-                        "        <button type=\"submit\" class=\"btn btn-sm btn-primary\" >Comment</button>\n" +
-                        "    </form>",
-                comment.getUser().getProfilePicData(),
-                comment.getUser().getUsername(),
-                comment.getUser().getUsername(),
-                comment.getContent()
-        );
-    }
-    public void getRetweeters(Context ctx) {
+
+
+    private void getRetweeters(Context ctx) {
         int tweetId = Integer.parseInt(ctx.pathParam("id"));
-        List<User> retweeters = tweetDAO.retweeters(tweetId);
+        List<User> retweeters = tweetService.getRetweeters(tweetId);
         ctx.render("templates/partials/reactors.peb", Map.of("reactors", retweeters));
     }
 
-    private void createPost(Context ctx) {
-        int userId = Integer.parseInt(ctx.formParam("user_id"));
-        String content = ctx.formParam("content");
-        String imageUrl = ctx.formParam("image_url");
+    private void createTweet(Context ctx) {
+        Integer userId = ctx.sessionAttribute("userId");
+        if (userId == null) {
+            ctx.status(401).result("Not authenticated");
+            return;
+        }
 
-        ctx.redirect("/posts");
+        String content = ctx.formParam("content");
+        byte[] tweetImage = ctx.uploadedFile("image") != null ? readUploadedFile(ctx.uploadedFile("image")) : null;
+
+        tweetService.createTweet(userId, content, tweetImage);
+        ctx.redirect("/feed");
+    }
+
+    private static byte[] readUploadedFile(UploadedFile uploadedFile) {
+        try {
+            return uploadedFile.content().readAllBytes();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to read file", e);
+        }
     }
 }

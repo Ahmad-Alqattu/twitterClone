@@ -1,6 +1,7 @@
 <div class="card mb-3">
     <div class="card-body" style="background-color: #f8f9fa;"> <!-- Light background color -->
-        <form id="create-tweet-form" hx-post="/tweet/create"
+        <form id="create-tweet-form"
+              action="/tweet/create" method="post"
               hx-target="#tweet-list"
               hx-swap="beforeend" enctype="multipart/form-data">
             <div class="mb-3">
@@ -37,4 +38,15 @@
             preview.style.display = 'none';
         }
     });
+    // document.getElementById('create-tweet-form').addEventListener('submit', function() {
+    //     // Clear the image input and preview after submission
+    //     const preview = document.getElementById('imagePreview');
+    //     const fileInput = document.getElementById('imageInput');
+    //
+    //     // Reset file input and hide the preview image
+    //     fileInput.value = '';
+    //     preview.src = '#';
+    //     preview.style.display = 'none';
+    // });
+
 </script>

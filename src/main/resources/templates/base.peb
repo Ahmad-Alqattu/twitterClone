@@ -6,36 +6,83 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/style.css">
-
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
 
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <img src='/img/logo.png' id="img" alt="" width="40" height="40" class="logo">
-        <a class="navbar-brand" href="/">Twitter Clone</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src='/img/logo.png' id="img" alt="" width="40" height="40" class="logo">
+            Twitter Clone
+        </a>
+        {% if user != null %}
+
+        <form class="d-flex mx-auto" id="searchForm">
+            <input id ="search" class="form-control me-2" type="search" name="search"  placeholder="Search Users"
+                   hx-get="/search"
+                   hx-target="#searchResults"
+                   hx-trigger="keyup changed delay:50ms, search"
+                   autocomplete="off">
+            <div id="searchResults" class="dropdown-menu" aria-labelledby="searchForm"></div>
+
+        </form>
+        {% endif %}
+
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                {% if session.get('userId') %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/signup">Sign Up</a>
-                </li>
-                {% endif %}
+                    <li class="nav-item">
+                            {% if user != null %}
+
+                            <div class="d-flex align-items-center mb-2">
+                            <a href="/profile/{{ user.username }}">
+                                <img src="data:image/jpeg;base64,{{user.getProfilePicBase64()}}" class="rounded-circle me-2"
+                                     width="40" height="40" alt="{{ user.username }}">
+                            </a>
+                            <h5 class="card-title mb-0"><a class="user-link"
+                                                           href="/profile/{{ user.username }}">{{ user.username }}</a></h5>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Sign Up</a>
+                    </li>
+                    {% endif %}
             </ul>
         </div>
-    </nav>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.6.1"></script>
-    <div class="container">
-        {% block content %}{% endblock %}
     </div>
+</nav>
+
+
+<div class="container">
+        {% block content %}{% endblock %}
+</div>
 
 
 </body>
+<script>
+    // Select the input element
+    const input = document.getElementById('search');
+    const searchResults = document.getElementById('searchResults');
+
+    // Add event listener for focus event
+    input.addEventListener('focus', function() {
+        searchResults.classList.add('show');
+    });
+
+    // Add event listener for blur event
+    input.addEventListener('blur', function() {
+        searchResults.classList.remove('show');
+    });
+
+
+</script>
 </html>

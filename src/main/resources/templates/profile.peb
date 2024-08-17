@@ -3,7 +3,7 @@
     {% block content %}
     <div class="profile-container">
         <!-- Profile Header (Wallpaper) -->
-        <div class="profile-header" style="background-image: url('data:image/jpeg;base64,{{wallpaperPicBase64}}');">
+        <div class="profile-header" style="background-image: url('data:image/jpeg;base64,{{user.wallpaperPicBase64}}');">
                 {% if user.id == currentUser %}
                 <label class="change-wallpaper-btn">
                     Change Wallpaper
@@ -15,7 +15,7 @@
         <div class="profile-info-section">
             <div class="profile-info">
                 <div class="profile-pic-container">
-                    <img src="data:image/jpeg;base64,{{profilePicBase64}}" alt="{{ user.username }}" class="profile-pic">
+                    <img src="data:image/jpeg;base64,{{user.getProfilePicBase64()}}" alt="{{ user.username }}" class="profile-pic">
                     {% if user.id == currentUser %}
                         <label class="change-profile-pic-btn" style="background-image: url('/img/changePic.png');">
                         </label>

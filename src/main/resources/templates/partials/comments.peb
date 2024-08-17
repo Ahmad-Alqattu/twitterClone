@@ -1,0 +1,7 @@
+
+        <div class="comment mb-2 d-flex align-items-center">
+            <img src="data:image/jpeg;base64,{{comment.user.profilePicBase64}}" class="rounded-circle me-2" width="30" height="30" alt="{{ comment.user.username }}">
+            <p class="mb-0"><strong><a class="user-link"  href="/profile/{{ tweet.retweetedByUser }}">{{ comment.user.username }}</a>:</strong> {{ comment.content }}</p>
+        </div>
+
+

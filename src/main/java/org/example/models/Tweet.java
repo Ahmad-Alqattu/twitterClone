@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class Tweet {
+    public String imageBase64;
     private int id;
     private int userId;
     private String content;

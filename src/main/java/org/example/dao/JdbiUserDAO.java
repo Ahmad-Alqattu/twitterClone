@@ -86,22 +86,44 @@ public class JdbiUserDAO implements UserDAO {
     }
 
     @Override
-    public List<User> searchUsers(String query, int limit) {
+    public List<User> searchUsers(String query) {
         return jdbi.withHandle(handle ->
-            handle.createQuery("SELECT * FROM users WHERE username LIKE :query OR email LIKE :query LIMIT :limit")
-                .bind("query", "%" + query + "%")
-                .bind("limit", limit)
-                .mapToBean(User.class)
-                .list()
+                handle.createQuery("SELECT * FROM users WHERE username ILIKE :query OR email ILIKE :query")
+                        .bind("query", "%" + query + "%")
+                        .map((rs, ctx) -> {
+                            User user = new User();
+                            user.setId(rs.getInt("id"));
+                            user.setUsername(rs.getString("username"));
+                            user.setEmail(rs.getString("email"));
+                            user.setPasswordHash(rs.getString("password_hash"));
+                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                            user.setCreatedAt((rs.getTimestamp("created_at")));
+                            user.setBio(rs.getString("bio"));
+
+                            return user;
+                        })
+                            .list()
         );
     }
+
     @Override
     public User getUserById(Long id) {
         return jdbi.withHandle(handle ->
                 handle.createQuery("SELECT * FROM users WHERE id = :id")
                         .bind("id", id)
-                        .mapToBean(User.class)
-                        .one());
+                        .map((rs, ctx) -> {
+                            User user = new User();
+                            user.setId(rs.getInt("id"));
+                            user.setUsername(rs.getString("username"));
+                            user.setEmail(rs.getString("email"));
+                            user.setPasswordHash(rs.getString("password_hash"));
+                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                            user.setWallpaperPicData(rs.getBytes("wallpaper_pic_data"));
+                            user.setCreatedAt(rs.getTimestamp("created_at"));
+                            user.setBio(rs.getString("bio"));
+
+                            return user;
+                        })                        .one());
     }
 
 

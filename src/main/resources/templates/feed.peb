@@ -14,8 +14,9 @@
                 {% if hasMoreTweets %}
                     <div class="text-center mt-4">
                         <button class="btn btn-primary"
-                                hx-get="/feed/load-more?offset={{ tweets | length }}"
-                                hx-trigger="click, revealed"
+                                style="margin-bottom: 15px;"
+                                hx-get="/feed/load-more?offset={{ nextOffset}}"
+                                hx-trigger="click , intersect once,revealed"
                                 hx-target="#tweet-list"
                                 hx-swap="beforeend">
                             Load More

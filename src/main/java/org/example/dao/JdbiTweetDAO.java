@@ -140,7 +140,7 @@ public class JdbiTweetDAO implements TweetDAO {
     public Tweet create(Tweet tweet) {
         // Insert the tweet into the database and get the generated ID
         Integer newId = jdbi.withHandle(handle ->
-                handle.createUpdate("INSERT INTO posts (user_id, content, image_data, created_at) VALUES (:userId, :content, :imagedata, :createdAt)")
+                handle.createUpdate("INSERT INTO tweets (user_id, content, image_data, created_at) VALUES (:userId, :content, :imagedata, :createdAt)")
                         .bind("userId", tweet.getUserId())
                         .bind("content", tweet.getContent())
                         .bind("imagedata", tweet.getImageData())
@@ -200,7 +200,7 @@ public class JdbiTweetDAO implements TweetDAO {
 
     @Override
     public List<User> likers(int tweetId) {
-        return jdbi.withHandle(handle -> handle.createQuery("SELECT u.id, u.username, u.email, u.profile_pic_data " + "FROM users u " + "JOIN likes l ON u.id = l.user_id " + "WHERE l.tweet_id = :tweetId " + "LIMIT :limit"
+        return jdbi.withHandle(handle -> handle.createQuery("SELECT u.id, u.username, u.email, u.profile_pic_data " + "FROM users u " + "JOIN likes l ON u.id = l.user_id " + "WHERE l.tweet_id = :tweetId "
 
         ).bind("tweetId", tweetId).map((rs, ctx) -> {
             User user = new User();
@@ -291,4 +291,9 @@ public class JdbiTweetDAO implements TweetDAO {
         return jdbi.withHandle(handle -> handle.createUpdate("DELETE FROM retweets WHERE user_id = :userId AND tweet_id = :tweetId").bind("userId", userId).bind("tweetId", tweetId).execute()) > 0;
     }
 
+    @Override
+    @SqlUpdate("DELETE FROM tweets WHERE id = :tweetId")
+    public boolean deleteTweet( @Bind("tweetId") int tweetId) {
+        return jdbi.withHandle(handle -> handle.createUpdate("DELETE FROM tweets WHERE id = :tweetId").bind("tweetId", tweetId).execute()) > 0;
+    }
 }

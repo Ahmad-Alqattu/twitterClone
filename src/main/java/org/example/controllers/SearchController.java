@@ -1,7 +1,7 @@
 package org.example.controllers;
 
-import org.example.dao.UserDAO;
 import org.example.models.User;
+import org.example.services.UserService;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -9,13 +9,12 @@ import io.javalin.http.Context;
 import java.util.List;
 import java.util.Map;
 
-// src/main/java/com/twitterclone/controllers/SearchController.java
 public class SearchController {
-    private final UserDAO userDAO;
+    private final UserService userService;
 
     @Inject
-    public SearchController(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public SearchController(UserService userService) {
+        this.userService = userService;
     }
 
     public void registerRoutes(Javalin app) {
@@ -23,8 +22,13 @@ public class SearchController {
     }
 
     private void searchUsers(Context ctx) {
-        String query = ctx.queryParam("q");
-        List<User> users = userDAO.searchUsers(query, 10);
-        ctx.render("partials/user-list.pebble", Map.of("users", users));
+        String query = ctx.queryParam("search");
+        List<User> users = userService.searchUsers(query);
+
+        if (users.isEmpty()) {
+            ctx.html("<div class='dropdown-item'>No users found</div>");
+        } else {
+            ctx.render("templates/partials/search_results.peb", Map.of("users", users));
+        }
     }
 }

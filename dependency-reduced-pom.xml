@@ -3,9 +3,25 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.example</groupId>
   <artifactId>twitterClone</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <version>10.7.1</version>
+        <configuration>
+          <url>jdbc:postgresql://127.0.0.1:5432/TwitterDB</url>
+          <user>postgres</user>
+          <password>master123</password>
+          <locations>
+            <location>./src/main/resources/db/migration</location>
+          </locations>
+          <schemas>
+            <schema>public</schema>
+          </schemas>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.4</version>
@@ -72,8 +88,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.target>22</maven.compiler.target>
-    <maven.compiler.source>22</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 </project>

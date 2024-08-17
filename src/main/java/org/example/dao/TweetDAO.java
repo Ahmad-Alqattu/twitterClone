@@ -29,4 +29,6 @@ public interface TweetDAO {
     boolean isRetweetedByMe(int tweetId,  int userId);
 
     boolean unretweet(int userId,int tweetId);
+
+    boolean deleteTweet(int tweetId);
 }

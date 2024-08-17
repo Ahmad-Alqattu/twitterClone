@@ -14,7 +14,7 @@ public interface UserDAO {
 
     User findByUsername(String username);
     User create(User user);
-    List<User> searchUsers(String query, int limit);
+    List<User> searchUsers(String query);
     User getUserById(Long id);
     void updateUserProfile(User user);
     List<Tweet> getUserTweets(int userId);

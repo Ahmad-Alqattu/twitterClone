@@ -252,3 +252,80 @@ color: #0c0c0c;
     background-color: #e2e6ea;
 }
 
+
+.mainContant{
+    margin-top:30vh;
+}
+
+/*landeng*/
+body {
+    background-color: #f5f8fa;
+}
+
+.navbar {
+    padding: 10px 10px;
+    /*margin-bottom: 100px;*/
+}
+
+.navbar-brand img {
+    width: 50px; /* Adjust logo size */
+}
+
+h1.display-4 {
+    font-weight: bold;
+    color: #1da1f2;
+}
+
+h2 {
+    font-weight: normal;
+    color: #657786;
+}
+
+.btn-primary {
+    background-color: #1da1f2;
+    border: none;
+}
+
+.btn-outline-primary {
+    border-color: #1da1f2;
+    color: #1da1f2;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1da1f2;
+    color: white;
+}
+
+.col-md-6+.img-fluid {
+    max-width: 80%;
+    height: auto;
+}
+
+/*search*/
+#searchForm .form-control {
+    width: 400px; /* Adjust as needed */
+}
+
+#searchResults {
+    position: absolute;
+     width: 400px;
+    top: 50px;
+    left: 208px;
+    max-height: 450px; /* Set a max height for scrollable content */
+    overflow-y: auto; /* Enable scrolling */
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.dropdown-item img {
+    margin-right: 10px;
+}
+
+.dropdown-item .btn {
+    margin-left: auto;
+}
+

@@ -1,26 +1,23 @@
 package org.example.controllers;
 
-import org.example.dao.UserDAO;
 import org.example.models.User;
+import org.example.services.UserService;
 import com.google.inject.Inject;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 import org.mindrot.jbcrypt.BCrypt;
 
-
-import io.javalin.http.Context;
-
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 import static io.javalin.rendering.template.TemplateUtil.model;
 
 public class AuthController {
-    private final UserDAO userDAO;
+    private final UserService userService;
 
     @Inject
-    public AuthController(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public AuthController(UserService userService) {
+        this.userService = userService;
     }
 
     public void registerRoutes(Javalin app) {
@@ -28,20 +25,18 @@ public class AuthController {
         app.post("/login", this::handleLogin);
         app.get("/signup", this::renderSignupPage);
         app.post("/signup", this::handleSignup);
-        app.post("/logout", this::handleLogout);
+        app.get("/logout", this::handleLogout);
     }
 
     private void renderLoginPage(Context ctx) {
-
-        Map<String, Object> model = new HashMap<>();
-        ctx.render("./templates/login.peb", model);
+        ctx.render("./templates/login.peb", new HashMap<>());
     }
 
     private void handleLogin(Context ctx) {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
-        User user = userDAO.findByUsername(username);
+        User user = userService.findByUsername(username);
         if (user != null && BCrypt.checkpw(password, user.getPasswordHash())) {
             ctx.sessionAttribute("userId", user.getId());
             ctx.redirect("/feed");
@@ -54,10 +49,7 @@ public class AuthController {
     }
 
     private void renderSignupPage(Context ctx) {
-        Map<String, Object> model = new HashMap<>();
-        ctx.render("templates/signup.peb", model);
-
-
+        ctx.render("templates/signup.peb", new HashMap<>());
     }
 
     private void handleSignup(Context ctx) {
@@ -65,11 +57,11 @@ public class AuthController {
         String email = ctx.formParam("email");
         String password = ctx.formParam("password");
 
-        if (userDAO.findByUsername(username) != null) {
+        if (userService.findByUsername(username) != null) {
             ctx.render("templates/signup.peb", model(
                     "isThereErrors", true,
                     "errorMessage", "Username already exists",
-                    "email", email  // Preserve the email input
+                    "email", email
             ));
             return;
         }
@@ -79,15 +71,13 @@ public class AuthController {
         newUser.setEmail(email);
         newUser.setPasswordHash(BCrypt.hashpw(password, BCrypt.gensalt()));
 
-        userDAO.create(newUser);
-
+        userService.updateUserProfile(newUser);
         ctx.sessionAttribute("userId", newUser.getId());
-        ctx.header("HX-Redirect", "/feed");
-        ctx.result("Redirecting...");
+        ctx.redirect("/feed");
     }
 
     private void handleLogout(Context ctx) {
         ctx.sessionAttribute("userId", null);
-        ctx.header("HX-Redirect", "/login");
+        ctx.redirect("/login");
     }
 }

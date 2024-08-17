@@ -1,0 +1,22 @@
+{% for user in users %}
+<a class="dropdown-item d-flex align-items-center" href="/profile/{{ user.username }}">
+    <img src="data:image/jpeg;base64,{{ user.getProfilePicBase64() }}" class="rounded-circle me-2" width="40" height="40" alt="{{ user.username }}">
+    <div>
+        <strong>{{ user.username }}</strong><br>
+        <small>{{ user.email }}</small>
+    </div>
+    {% if currentUser != null and user.id != currentUser %}
+{#        {% if user.isFollowedBy(currentUser) %}#}
+{#            <button class="btn btn-outline-secondary btn-sm ml-auto"#}
+{#                    hx-post="/unfollow/{{ user.id }}"#}
+{#                    hx-target="this"#}
+{#                    hx-swap="outerHTML">Unfollow</button>#}
+{#            {% else %}#}
+{#            <button class="btn btn-outline-primary btn-sm ml-auto"#}
+{#                    hx-post="/follow/{{ user.id }}"#}
+{#                    hx-target="this"#}
+{#                    hx-swap="outerHTML">Follow</button>#}
+{#        {% endif %}#}
+    {% endif %}
+</a>
+{% endfor %}
