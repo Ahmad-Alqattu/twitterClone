@@ -24,6 +24,7 @@
         @Provides
         @Singleton
         public Jdbi provideJdbi(Config config) {
+
             Flyway flyway = Flyway.configure()
                     .dataSource("jdbc:postgresql://127.0.0.1:5432/TwitterDB", "postgres", "master123")
                     .locations("classpath:db/migration")
