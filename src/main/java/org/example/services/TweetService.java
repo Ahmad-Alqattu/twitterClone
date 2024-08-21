@@ -1,14 +1,15 @@
 package org.example.services;
 
-import org.example.dao.TweetDAO;
-import org.example.models.Tweet;
-import org.example.models.Comment;
-import org.example.models.User;
 import com.google.inject.Inject;
+import org.example.dao.TweetDAO;
+import org.example.models.Comment;
+import org.example.models.Tweet;
+import org.example.models.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 
 public class TweetService {
@@ -19,10 +20,37 @@ public class TweetService {
         this.tweetDAO = tweetDAO;
     }
 
+//    public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
+//        List<Tweet> tweets = getTimelineForUser(userId, limit, offset);
+//         tweets.forEach(this::processTweet);
+//        return tweets;
+//    }
+
     public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
-        List<Tweet> tweets = tweetDAO.getTimelineForUser(userId, limit, offset);
-         tweets.forEach(this::processTweet);
-        return tweets;
+        List<Tweet> originalTweets = tweetDAO.getTweetsForUser(userId, limit, offset);
+        List<Tweet> retweets = tweetDAO.getRetweetsForUser(userId, limit, offset);
+
+        // Combine the two lists
+        List<Tweet> combinedTweets = new ArrayList<>();
+        combinedTweets.addAll(originalTweets);
+        combinedTweets.addAll(retweets);
+
+        // Sort combined tweets by creation date
+        combinedTweets.sort(Comparator.comparing(Tweet::getCreatedAt).reversed());
+
+        // Limit to final size after combining (if necessary)
+        if (combinedTweets.size() > limit) {
+
+            combinedTweets = combinedTweets.subList(0, limit);
+            combinedTweets.forEach(this::processTweet);
+
+            return combinedTweets;
+
+        } else {
+            combinedTweets.forEach(this::processTweet);
+            return combinedTweets;
+        }
+
     }
 
     public Tweet getTweetById(int tweetId, int userId) {
@@ -85,7 +113,7 @@ public class TweetService {
     }
 
     public Comment addComment(int tweetId, int userId, String content) {
-        Comment c=tweetDAO.addComment(tweetId, userId, content);
+        Comment c = tweetDAO.addComment(tweetId, userId, content);
         processComment(c);
         return c;
     }

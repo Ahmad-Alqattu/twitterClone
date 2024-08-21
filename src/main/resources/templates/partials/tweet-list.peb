@@ -1,7 +1,7 @@
     {% for tweet in tweets %}
     <div class="card mb-3 tweets-list" style="background-color: #f8f9fa;">
         <div class="card-body">
-            {% if tweet.retweetedByUser %}
+            {% if tweet.getRetweetedByUser %}
                 <p class="text-muted"><a class="user-link" href="/profile/{{ tweet.retweetedByUser }}">{{ tweet.retweetedByUser }}</a> retweeted this</p>
             {% endif %}
 
@@ -57,7 +57,13 @@
         </div>
     </div>
     {% endfor %}
-
+        {% if hasMoreTweets %}
+        <div id="load-more" hx-get="/feed/load-more?offset={{ nextOffset }}"
+             hx-trigger="intersect once"
+             hx-target="#tweet-list"
+             hx-swap="beforeend">
+        </div>
+        {% endif %}
     <div id="delete-confirmation-template" style="display: none;">
         <div class="alert alert-danger" role="alert">
             Are you sure you want to delete this tweet? This action cannot be undone.

@@ -7,7 +7,6 @@ import org.example.models.User;
 import java.util.List;
 
 public interface TweetDAO {
-    List<Tweet> getTimelineForUser(int userId, int limit, int offset);
 
     Comment addComment(int tweetId, int userId, String content);
 
@@ -23,8 +22,10 @@ public interface TweetDAO {
     List<User> likers(int tweetId) ;
     List<User> retweeters(int tweetId);
 
-
+    List<Tweet> getRetweetsForUser(int userId, int limit, int offset);
     boolean isLikedByMe(int tweetId, int userId);
+
+    List<Tweet> getTweetsForUser(int userId, int limit, int offset);
 
     boolean isRetweetedByMe(int tweetId,  int userId);
 

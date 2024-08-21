@@ -22,84 +22,234 @@ public class JdbiTweetDAO implements TweetDAO {
         this.jdbi = jdbi;
     }
 
-
     @Override
-    public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
+    public List<Tweet> getRetweetsForUser(int userId, int limit, int offset) {
         return jdbi.withHandle(handle -> {
-            // Fetch both original tweets and retweets in a single query
-            List<Tweet> tweets = handle.createQuery(
-                            "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
-                                    "u.username, u.profile_pic_data, " +
-                                    "COUNT(DISTINCT l.id) AS like_count, " +
-                                    "COUNT(DISTINCT r.id) AS retweet_count, " +
-                                    "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
-                                    "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me, " +
-                                    "(SELECT ru.username FROM users ru JOIN retweets r2 ON r2.user_id = ru.id WHERE r2.tweet_id = t.id LIMIT 1) AS retweeted_by_user " +
-                                    "FROM tweets t " +
-                                    "JOIN users u ON t.user_id = u.id " +
-                                    "LEFT JOIN likes l ON t.id = l.tweet_id " +
-                                    "LEFT JOIN retweets r ON t.id = r.tweet_id " +
-                                    "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) " +
-                                    "OR t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
-                                    "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
-                                    "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
-                    .bind("userId", userId)
-                    .bind("limit", limit)
-                    .bind("offset", offset)
-                    .map((rs, ctx) -> {
-                        Tweet tweet = new Tweet();
-                        tweet.setId(rs.getInt("id"));
-                        tweet.setUserId(rs.getInt("user_id"));
-                        tweet.setContent(rs.getString("content"));
-                        tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        tweet.setImageData(rs.getBytes("image_data"));
-                        tweet.setLikeCount(rs.getInt("like_count"));
-                        tweet.setRetweetCount(rs.getInt("retweet_count"));
-                        tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
-                        tweet.setRetweetedByMe(rs.getBoolean("retweeted_by_me"));
-                        tweet.setRetweetedByUser(rs.getString("retweeted_by_user"));
-
-                        User user = new User();
-                        user.setId(rs.getInt("user_id"));
-                        user.setUsername(rs.getString("username"));
-                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
-                        tweet.setUser(user);
-
-                        return tweet;
-                    })
-                    .list();
-
-            // Fetch comments for each tweet
-            for (Tweet tweet : tweets) {
-                List<Comment> comments = handle.createQuery(
-                                "SELECT c.*, u.username, u.profile_pic_data " +
-                                        "FROM comments c " +
-                                        "JOIN users u ON c.user_id = u.id " +
-                                        "WHERE c.tweet_id = :tweetId " +
-                                        "ORDER BY c.created_at ASC")
-                        .bind("tweetId", tweet.getId())
+//            // Fetch both original tweets and retweets in a single query
+         List<Tweet> tweets = handle.createQuery(
+                                "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
+                                        "u.username, u.profile_pic_data, " +
+                                        "COUNT(DISTINCT l.id) AS like_count, " +
+                                        "COUNT(DISTINCT r.id) AS retweet_count, " +
+                                        "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
+                                        "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me, " +
+                                        "(SELECT ru.username FROM users ru JOIN retweets r2 ON r2.user_id = ru.id WHERE r2.tweet_id = t.id LIMIT 1) AS retweeted_by_user " +
+                                        "FROM tweets t " +
+                                        "JOIN users u ON t.user_id = u.id " +
+                                        "LEFT JOIN likes l ON t.id = l.tweet_id " +
+                                        "LEFT JOIN retweets r ON t.id = r.tweet_id " +
+                                        "WHERE t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
+                                        "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
+                                        "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
+                        .bind("userId", userId)
+                        .bind("limit", limit)
+                        .bind("offset", offset)
                         .map((rs, ctx) -> {
-                            Comment comment = new Comment();
-                            comment.setId(rs.getInt("id"));
-                            comment.setContent(rs.getString("content"));
-                            comment.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                            Tweet tweet = new Tweet();
+                            tweet.setId(rs.getInt("id"));
+                            tweet.setUserId(rs.getInt("user_id"));
+                            tweet.setContent(rs.getString("content"));
+                            tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                            tweet.setImageData(rs.getBytes("image_data"));
+                            tweet.setLikeCount(rs.getInt("like_count"));
+                            tweet.setRetweetCount(rs.getInt("retweet_count"));
+                            tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
+                            tweet.setRetweetedByMe(rs.getBoolean("retweeted_by_me"));
+                            tweet.setRetweetedByUser(rs.getString("retweeted_by_user"));
 
                             User user = new User();
                             user.setId(rs.getInt("user_id"));
                             user.setUsername(rs.getString("username"));
                             user.setProfilePicData(rs.getBytes("profile_pic_data"));
-                            comment.setUser(user);
+                            tweet.setUser(user);
 
-                            return comment;
+                            return tweet;
                         })
                         .list();
 
-                tweet.setComments(comments);
-            }
+        for (Tweet tweet : tweets) {
+            List<Comment> comments = handle.createQuery(
+                            "SELECT c.*, u.username, u.profile_pic_data " +
+                                    "FROM comments c " +
+                                    "JOIN users u ON c.user_id = u.id " +
+                                    "WHERE c.tweet_id = :tweetId " +
+                                    "ORDER BY c.created_at ASC")
+                    .bind("tweetId", tweet.getId())
+                    .map((rs, ctx) -> {
+                        Comment comment = new Comment();
+                        comment.setId(rs.getInt("id"));
+                        comment.setContent(rs.getString("content"));
+                        comment.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
 
-            return tweets;
-        });
+                        User user = new User();
+                        user.setId(rs.getInt("user_id"));
+                        user.setUsername(rs.getString("username"));
+                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                        comment.setUser(user);
+
+                        return comment;
+                    })
+                    .list();
+
+            tweet.setComments(comments);
+        }
+
+                    return tweets;
+                }
+        );
     }
+    @Override
+    public List<Tweet> getTweetsForUser(int userId, int limit, int offset) {
+        return jdbi.withHandle(handle -> {
+          List<Tweet> tweets =
+                                handle.createQuery(
+                                                "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
+                                                        "u.username, u.profile_pic_data, " +
+                                                        "COUNT(DISTINCT l.id) AS like_count, " +
+                                                        "COUNT(DISTINCT r.id) AS retweet_count, " +
+                                                        "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
+                                                        "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me " +
+                                                        "FROM tweets t " +
+                                                        "JOIN users u ON t.user_id = u.id " +
+                                                        "LEFT JOIN likes l ON t.id = l.tweet_id " +
+                                                        "LEFT JOIN retweets r ON t.id = r.tweet_id " +
+                                                        "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) " +
+                                                        "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
+                                                        "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
+                                        .bind("userId", userId)
+                                        .bind("limit", limit)
+                                        .bind("offset", offset)
+                                        .map((rs, ctx) -> {
+                                            Tweet tweet = new Tweet();
+                                            tweet.setId(rs.getInt("id"));
+                                            tweet.setUserId(rs.getInt("user_id"));
+                                            tweet.setContent(rs.getString("content"));
+                                            tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                                            tweet.setImageData(rs.getBytes("image_data"));
+                                            tweet.setLikeCount(rs.getInt("like_count"));
+                                            tweet.setRetweetCount(rs.getInt("retweet_count"));
+                                            tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
+                                            tweet.setRetweetedByMe(rs.getBoolean("retweeted_by_me"));
+
+                                            User user = new User();
+                                            user.setId(rs.getInt("user_id"));
+                                            user.setUsername(rs.getString("username"));
+                                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                                            tweet.setUser(user);
+
+                                            return tweet;
+                                        })
+                                        .list();
+
+        for (Tweet tweet : tweets) {
+            List<Comment> comments = handle.createQuery(
+                            "SELECT c.*, u.username, u.profile_pic_data " +
+                                    "FROM comments c " +
+                                    "JOIN users u ON c.user_id = u.id " +
+                                    "WHERE c.tweet_id = :tweetId " +
+                                    "ORDER BY c.created_at ASC")
+                    .bind("tweetId", tweet.getId())
+                    .map((rs, ctx) -> {
+                        Comment comment = new Comment();
+                        comment.setId(rs.getInt("id"));
+                        comment.setContent(rs.getString("content"));
+                        comment.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+                        User user = new User();
+                        user.setId(rs.getInt("user_id"));
+                        user.setUsername(rs.getString("username"));
+                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                        comment.setUser(user);
+
+                        return comment;
+                    })
+                    .list();
+
+            tweet.setComments(comments);
+        }
+
+        return tweets;
+    }
+        );
+    }
+
+//    @Override
+//    public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
+//        return jdbi.withHandle(handle -> {
+//            // Fetch both original tweets and retweets in a single query
+//            List<Tweet> tweets = handle.createQuery(
+//                            "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
+//                                    "u.username, u.profile_pic_data, " +
+//                                    "COUNT(DISTINCT l.id) AS like_count, " +
+//                                    "COUNT(DISTINCT r.id) AS retweet_count, " +
+//                                    "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
+//                                    "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me, " +
+//                                    "(SELECT ru.username FROM users ru JOIN retweets r2 ON r2.user_id = ru.id WHERE r2.tweet_id = t.id LIMIT 1) AS retweeted_by_user " +
+//                                    "FROM tweets t " +
+//                                    "JOIN users u ON t.user_id = u.id " +
+//                                    "LEFT JOIN likes l ON t.id = l.tweet_id " +
+//                                    "LEFT JOIN retweets r ON t.id = r.tweet_id " +
+//                                    "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) " +
+//                                    "OR t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
+//                                    "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
+//                                    "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
+//                    .bind("userId", userId)
+//                    .bind("limit", limit)
+//                    .bind("offset", offset)
+//                    .map((rs, ctx) -> {
+//                        Tweet tweet = new Tweet();
+//                        tweet.setId(rs.getInt("id"));
+//                        tweet.setUserId(rs.getInt("user_id"));
+//                        tweet.setContent(rs.getString("content"));
+//                        tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+//                        tweet.setImageData(rs.getBytes("image_data"));
+//                        tweet.setLikeCount(rs.getInt("like_count"));
+//                        tweet.setRetweetCount(rs.getInt("retweet_count"));
+//                        tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
+//                        tweet.setRetweetedByMe(rs.getBoolean("retweeted_by_me"));
+//                        tweet.setRetweetedByUser(rs.getString("retweeted_by_user"));
+//
+//                        User user = new User();
+//                        user.setId(rs.getInt("user_id"));
+//                        user.setUsername(rs.getString("username"));
+//                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+//                        tweet.setUser(user);
+//
+//                        return tweet;
+//                    })
+//                    .list();
+//
+//            // Fetch comments for each tweet
+//            for (Tweet tweet : tweets) {
+//                List<Comment> comments = handle.createQuery(
+//                                "SELECT c.*, u.username, u.profile_pic_data " +
+//                                        "FROM comments c " +
+//                                        "JOIN users u ON c.user_id = u.id " +
+//                                        "WHERE c.tweet_id = :tweetId " +
+//                                        "ORDER BY c.created_at ASC")
+//                        .bind("tweetId", tweet.getId())
+//                        .map((rs, ctx) -> {
+//                            Comment comment = new Comment();
+//                            comment.setId(rs.getInt("id"));
+//                            comment.setContent(rs.getString("content"));
+//                            comment.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+//
+//                            User user = new User();
+//                            user.setId(rs.getInt("user_id"));
+//                            user.setUsername(rs.getString("username"));
+//                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+//                            comment.setUser(user);
+//
+//                            return comment;
+//                        })
+//                        .list();
+//
+//                tweet.setComments(comments);
+//            }
+//
+//            return tweets;
+//        });
+//    }
 
 
 

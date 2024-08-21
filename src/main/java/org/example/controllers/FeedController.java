@@ -55,12 +55,12 @@ public class FeedController {
     private void loadMoreTweets(Context ctx) {
         Integer userId = ctx.sessionAttribute("userId");
         Integer   offset = ctx.queryParamAsClass("offset", Integer.class).getOrDefault(0);
-
+        int nextOffset= (offset + TWEETS_PER_PAGE);
         List<Tweet> moreTweets = tweetService.getTimelineForUser(userId, TWEETS_PER_PAGE, offset);
         ctx.render("templates/partials/tweet-list.peb", model(
                 "tweets", moreTweets,
                 "hasMoreTweets", moreTweets.size() == TWEETS_PER_PAGE,
-                "nextOffset", offset + TWEETS_PER_PAGE
+                "nextOffset",nextOffset
         ));
     }
 }
