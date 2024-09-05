@@ -23,6 +23,9 @@ public interface TweetDAO {
     List<User> retweeters(int tweetId);
 
     List<Tweet> getRetweetsForUser(int userId, int limit, int offset);
+
+    boolean updateTweet(Tweet tweet);
+
     boolean isLikedByMe(int tweetId, int userId);
 
     List<Tweet> getTweetsForUser(int userId, int limit, int offset);
@@ -32,4 +35,5 @@ public interface TweetDAO {
     boolean unretweet(int userId,int tweetId);
 
     boolean deleteTweet(int tweetId);
+    byte[] getTweetImagData(int tweetId);
 }

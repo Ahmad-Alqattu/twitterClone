@@ -22,13 +22,24 @@ public class JdbiTweetDAO implements TweetDAO {
         this.jdbi = jdbi;
     }
 
+
+
+    @Override
+    public byte[] getTweetImagData(int tweetId) {
+        return jdbi.withHandle(handle ->
+                handle.createQuery("SELECT image_data FROM tweets WHERE id = :tweetId")
+                        .bind("tweetId", tweetId)
+                        .mapTo(byte[].class)
+                        .findOnly()
+        );
+    }
     @Override
     public List<Tweet> getRetweetsForUser(int userId, int limit, int offset) {
         return jdbi.withHandle(handle -> {
 //            // Fetch both original tweets and retweets in a single query
          List<Tweet> tweets = handle.createQuery(
-                                "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
-                                        "u.username, u.profile_pic_data, " +
+                                "SELECT t.id, t.user_id, t.content, t.image_data IS NOT NULL AS has_image,t.created_at, " +
+                                        "u.username, u.profile_pic_data IS NOT NULL AS has_profile_pic, " +
                                         "COUNT(DISTINCT l.id) AS like_count, " +
                                         "COUNT(DISTINCT r.id) AS retweet_count, " +
                                         "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
@@ -39,8 +50,8 @@ public class JdbiTweetDAO implements TweetDAO {
                                         "LEFT JOIN likes l ON t.id = l.tweet_id " +
                                         "LEFT JOIN retweets r ON t.id = r.tweet_id " +
                                         "WHERE t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
-                                        "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
-                                        "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
+                                        "GROUP BY t.id, t.user_id, t.content, t.created_at, u.username, u.profile_pic_data " +
+                                        "ORDER BY  t.created_at DESC, t.id DESC LIMIT :limit OFFSET :offset")
                         .bind("userId", userId)
                         .bind("limit", limit)
                         .bind("offset", offset)
@@ -50,7 +61,8 @@ public class JdbiTweetDAO implements TweetDAO {
                             tweet.setUserId(rs.getInt("user_id"));
                             tweet.setContent(rs.getString("content"));
                             tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                            tweet.setImageData(rs.getBytes("image_data"));
+                            tweet.setHasImage(rs.getBoolean("has_image"));
+
                             tweet.setLikeCount(rs.getInt("like_count"));
                             tweet.setRetweetCount(rs.getInt("retweet_count"));
                             tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
@@ -60,7 +72,8 @@ public class JdbiTweetDAO implements TweetDAO {
                             User user = new User();
                             user.setId(rs.getInt("user_id"));
                             user.setUsername(rs.getString("username"));
-                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
                             tweet.setUser(user);
 
                             return tweet;
@@ -69,7 +82,7 @@ public class JdbiTweetDAO implements TweetDAO {
 
         for (Tweet tweet : tweets) {
             List<Comment> comments = handle.createQuery(
-                            "SELECT c.*, u.username, u.profile_pic_data " +
+                            "SELECT c.*, u.username, u.profile_pic_data IS NOT NULL AS has_profile_pic " +
                                     "FROM comments c " +
                                     "JOIN users u ON c.user_id = u.id " +
                                     "WHERE c.tweet_id = :tweetId " +
@@ -84,7 +97,7 @@ public class JdbiTweetDAO implements TweetDAO {
                         User user = new User();
                         user.setId(rs.getInt("user_id"));
                         user.setUsername(rs.getString("username"));
-                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                        user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
                         comment.setUser(user);
 
                         return comment;
@@ -103,19 +116,21 @@ public class JdbiTweetDAO implements TweetDAO {
         return jdbi.withHandle(handle -> {
           List<Tweet> tweets =
                                 handle.createQuery(
-                                                "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
-                                                        "u.username, u.profile_pic_data, " +
-                                                        "COUNT(DISTINCT l.id) AS like_count, " +
-                                                        "COUNT(DISTINCT r.id) AS retweet_count, " +
-                                                        "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
-                                                        "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me " +
-                                                        "FROM tweets t " +
-                                                        "JOIN users u ON t.user_id = u.id " +
-                                                        "LEFT JOIN likes l ON t.id = l.tweet_id " +
-                                                        "LEFT JOIN retweets r ON t.id = r.tweet_id " +
-                                                        "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) " +
-                                                        "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
-                                                        "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
+                                                "SELECT t.id, t.user_id, t.content, t.image_data IS NOT NULL AS has_image,\n" +
+                                                        "       t.created_at, \n" +
+                                                        "       u.username, u.profile_pic_data IS NOT NULL AS has_profile_pic, \n" +
+                                                        "       COUNT(DISTINCT l.id) AS like_count, \n" +
+                                                        "       COUNT(DISTINCT r.id) AS retweet_count, \n" +
+                                                        "       EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, \n" +
+                                                        "       EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me \n" +
+                                                        "FROM tweets t \n" +
+                                                        "JOIN users u ON t.user_id = u.id \n" +
+                                                        "LEFT JOIN likes l ON t.id = l.tweet_id \n" +
+                                                        "LEFT JOIN retweets r ON t.id = r.tweet_id \n" +
+                                                        "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) \n" +
+                                                        "GROUP BY t.id, t.user_id, t.content, t.created_at,u.profile_pic_data, u.username \n" +
+                                                        "ORDER BY t.created_at DESC, t.id DESC \n" +
+                                                        "LIMIT :limit OFFSET :offset;\n")
                                         .bind("userId", userId)
                                         .bind("limit", limit)
                                         .bind("offset", offset)
@@ -125,7 +140,8 @@ public class JdbiTweetDAO implements TweetDAO {
                                             tweet.setUserId(rs.getInt("user_id"));
                                             tweet.setContent(rs.getString("content"));
                                             tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                                            tweet.setImageData(rs.getBytes("image_data"));
+                                            tweet.setHasImage(rs.getBoolean("has_image"));
+
                                             tweet.setLikeCount(rs.getInt("like_count"));
                                             tweet.setRetweetCount(rs.getInt("retweet_count"));
                                             tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
@@ -134,7 +150,8 @@ public class JdbiTweetDAO implements TweetDAO {
                                             User user = new User();
                                             user.setId(rs.getInt("user_id"));
                                             user.setUsername(rs.getString("username"));
-                                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                                            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
                                             tweet.setUser(user);
 
                                             return tweet;
@@ -143,7 +160,7 @@ public class JdbiTweetDAO implements TweetDAO {
 
         for (Tweet tweet : tweets) {
             List<Comment> comments = handle.createQuery(
-                            "SELECT c.*, u.username, u.profile_pic_data " +
+                            "SELECT c.*, u.username, u.profile_pic_data IS NOT NULL AS has_profile_pic " +
                                     "FROM comments c " +
                                     "JOIN users u ON c.user_id = u.id " +
                                     "WHERE c.tweet_id = :tweetId " +
@@ -158,7 +175,8 @@ public class JdbiTweetDAO implements TweetDAO {
                         User user = new User();
                         user.setId(rs.getInt("user_id"));
                         user.setUsername(rs.getString("username"));
-                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                        user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
                         comment.setUser(user);
 
                         return comment;
@@ -173,87 +191,6 @@ public class JdbiTweetDAO implements TweetDAO {
         );
     }
 
-//    @Override
-//    public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
-//        return jdbi.withHandle(handle -> {
-//            // Fetch both original tweets and retweets in a single query
-//            List<Tweet> tweets = handle.createQuery(
-//                            "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
-//                                    "u.username, u.profile_pic_data, " +
-//                                    "COUNT(DISTINCT l.id) AS like_count, " +
-//                                    "COUNT(DISTINCT r.id) AS retweet_count, " +
-//                                    "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
-//                                    "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me, " +
-//                                    "(SELECT ru.username FROM users ru JOIN retweets r2 ON r2.user_id = ru.id WHERE r2.tweet_id = t.id LIMIT 1) AS retweeted_by_user " +
-//                                    "FROM tweets t " +
-//                                    "JOIN users u ON t.user_id = u.id " +
-//                                    "LEFT JOIN likes l ON t.id = l.tweet_id " +
-//                                    "LEFT JOIN retweets r ON t.id = r.tweet_id " +
-//                                    "WHERE t.user_id = :userId OR t.user_id IN (SELECT followed_id FROM followers WHERE follower_id = :userId) " +
-//                                    "OR t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
-//                                    "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
-//                                    "ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset")
-//                    .bind("userId", userId)
-//                    .bind("limit", limit)
-//                    .bind("offset", offset)
-//                    .map((rs, ctx) -> {
-//                        Tweet tweet = new Tweet();
-//                        tweet.setId(rs.getInt("id"));
-//                        tweet.setUserId(rs.getInt("user_id"));
-//                        tweet.setContent(rs.getString("content"));
-//                        tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-//                        tweet.setImageData(rs.getBytes("image_data"));
-//                        tweet.setLikeCount(rs.getInt("like_count"));
-//                        tweet.setRetweetCount(rs.getInt("retweet_count"));
-//                        tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
-//                        tweet.setRetweetedByMe(rs.getBoolean("retweeted_by_me"));
-//                        tweet.setRetweetedByUser(rs.getString("retweeted_by_user"));
-//
-//                        User user = new User();
-//                        user.setId(rs.getInt("user_id"));
-//                        user.setUsername(rs.getString("username"));
-//                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
-//                        tweet.setUser(user);
-//
-//                        return tweet;
-//                    })
-//                    .list();
-//
-//            // Fetch comments for each tweet
-//            for (Tweet tweet : tweets) {
-//                List<Comment> comments = handle.createQuery(
-//                                "SELECT c.*, u.username, u.profile_pic_data " +
-//                                        "FROM comments c " +
-//                                        "JOIN users u ON c.user_id = u.id " +
-//                                        "WHERE c.tweet_id = :tweetId " +
-//                                        "ORDER BY c.created_at ASC")
-//                        .bind("tweetId", tweet.getId())
-//                        .map((rs, ctx) -> {
-//                            Comment comment = new Comment();
-//                            comment.setId(rs.getInt("id"));
-//                            comment.setContent(rs.getString("content"));
-//                            comment.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-//
-//                            User user = new User();
-//                            user.setId(rs.getInt("user_id"));
-//                            user.setUsername(rs.getString("username"));
-//                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
-//                            comment.setUser(user);
-//
-//                            return comment;
-//                        })
-//                        .list();
-//
-//                tweet.setComments(comments);
-//            }
-//
-//            return tweets;
-//        });
-//    }
-
-
-
-
     @Override
     public Comment addComment(int tweetId, int userId, String content) {
         return jdbi.withHandle(handle -> {
@@ -266,13 +203,14 @@ public class JdbiTweetDAO implements TweetDAO {
                     .mapTo(Integer.class)
                     .one();
 
-            return handle.createQuery("SELECT c.*, u.username, u.profile_pic_data FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = :id")
+            return handle.createQuery("SELECT c.*, u.username, u.profile_pic_data IS NOT NULL AS has_profile_pic FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = :id")
                     .bind("id", id)
                     .map((rs, ctx) -> {
                         User user = new User();
                         user.setId(rs.getInt("user_id"));
                         user.setUsername(rs.getString("username"));
-                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                        user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
                         Comment comment = new Comment(
                                 rs.getInt("id"),
                                 rs.getInt("tweet_id"),
@@ -312,7 +250,7 @@ public class JdbiTweetDAO implements TweetDAO {
                         "INSERT INTO retweets (user_id, tweet_id, created_at) VALUES (:userId, :tweetId, :createdAt)")
                 .bind("userId", userId)
                 .bind("tweetId", originalTweetId)
-                .bind("createdAt", Timestamp.valueOf(LocalDateTime.now()))
+                .bind("createdAt", LocalDateTime.now())
                 .execute());
 
         return rowsAffected > 0;
@@ -357,7 +295,8 @@ public class JdbiTweetDAO implements TweetDAO {
             user.setId(rs.getInt("id"));
             user.setUsername(rs.getString("username"));
             user.setEmail(rs.getString("email"));
-            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
             return user;
         }).list());
     }
@@ -371,7 +310,8 @@ public class JdbiTweetDAO implements TweetDAO {
                     user.setId(rs.getInt("id"));
                     user.setUsername(rs.getString("username"));
                     user.setEmail(rs.getString("email"));
-                    user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                    user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
                     return user;
                 }
 
@@ -380,7 +320,7 @@ public class JdbiTweetDAO implements TweetDAO {
 
     @Override
     public Tweet getTweetById(int tweetId, int userId) {
-        return jdbi.withHandle(handle -> handle.createQuery("SELECT t.id, t.content, t.created_at, t.image_data, " + "u.id AS user_id, u.username, u.profile_pic_data, u.email, " + "(SELECT COUNT(*) FROM likes WHERE tweet_id = t.id) AS like_count, " + "(SELECT COUNT(*) FROM retweets WHERE tweet_id = t.id) AS retweet_count, " + "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " + "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me " + "FROM tweets t, users u " + // Added space after "users"
+        return jdbi.withHandle(handle -> handle.createQuery("SELECT t.id, t.content, t.created_at,t.image_data, t.image_data IS NOT NULL AS has_image, " + "u.id AS user_id, u.username, u.profile_pic_data ,u.profile_pic_data IS NOT NULL AS has_profile_pic, u.email, " + "(SELECT COUNT(*) FROM likes WHERE tweet_id = t.id) AS like_count, " + "(SELECT COUNT(*) FROM retweets WHERE tweet_id = t.id) AS retweet_count, " + "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " + "EXISTS (SELECT 1 FROM retweets WHERE tweet_id = t.id AND user_id = :userId) AS retweeted_by_me " + "FROM tweets t, users u " + // Added space after "users"
                         "WHERE t.user_id = u.id AND t.id = :tweetId" // Added space before "AND"
                 ).bind("tweetId", tweetId).bind("userId", userId)
                 .map((rs, ctx) -> {
@@ -389,6 +329,7 @@ public class JdbiTweetDAO implements TweetDAO {
                     tweet.setUserId(rs.getInt("user_id"));
                     tweet.setContent(rs.getString("content"));
                     tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                    tweet.setHasImage(rs.getBoolean("has_image"));
                     tweet.setImageData(rs.getBytes("image_data"));
                     tweet.setLikeCount(rs.getInt("like_count"));
                     tweet.setRetweetCount(rs.getInt("retweet_count"));
@@ -397,7 +338,8 @@ public class JdbiTweetDAO implements TweetDAO {
                     User user = new User();
                     user.setId(rs.getInt("user_id"));
                     user.setUsername(rs.getString("username"));
-                    user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                    user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
 
                     tweet.setUser(user);
                     return tweet;
@@ -412,15 +354,26 @@ public class JdbiTweetDAO implements TweetDAO {
             tweet.setUserId(rs.getInt("user_id"));
             tweet.setContent(rs.getString("content"));
             tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-            tweet.setImageData(rs.getBytes("image_data"));
+            tweet.setHasImage(rs.getBoolean("has_image"));
+
             User user = new User();
             user.setId(rs.getInt("user_id"));
             user.setUsername(rs.getString("username"));
-            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
+
 
             tweet.setUser(user);
             return tweet;
         }).list());
+    }
+    @Override
+    public boolean updateTweet(Tweet tweet) {
+        return jdbi.withHandle(handle ->
+                handle.createUpdate("UPDATE tweets SET content = :content, image_data = :imageData WHERE id = :id")
+                        .bind("content", tweet.getContent())
+                        .bind("imageData", tweet.getImageData())  // This should be a byte[] for the image
+                        .bind("id", tweet.getId())
+                        .execute()) > 0;  // Returns true if at least one row was updated
     }
 
     @Override

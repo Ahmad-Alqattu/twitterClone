@@ -1,32 +1,51 @@
     {% for tweet in tweets %}
-    <div class="card mb-3 tweets-list" style="background-color: #f8f9fa;">
+    <div id="tweets-list-{{ tweet.id }}" class="card mb-3 tweets-list" style="background-color: #f8f9fa;" >
         <div class="card-body">
-            {% if tweet.getRetweetedByUser %}
-                <p class="text-muted"><a class="user-link" href="/profile/{{ tweet.retweetedByUser }}">{{ tweet.retweetedByUser }}</a> retweeted this</p>
-            {% endif %}
+            <div class="d-flex align-items-start justify-content-between mb-2">
+                <div>
+                    {% if tweet.retweetedByUser %}
+                        <p class="text-muted mb-1">
+                            <a class="user-link" href="/profile/{{ tweet.retweetedByUser }}">
+                                    {{ tweet.retweetedByUser }}
+                            </a> retweeted this
+                        </p>
+                    {% endif %}
 
-{#            {% if currentUser!=null and tweet.user.id==currentUser %}#}
-{#                <img src="/img/delete-icon.png" alt="Delete" class="delete-icon" style="float: right; cursor: pointer;"#}
-{#                     hx-post="/tweet/{{ tweet.id }}/delete"#}
-{#                     hx-target=".tweets-list"#}
-{#                     hx-swap="outerHTML"#}
-{#                     data-bs-toggle="tooltip"#}
-{#                     data-bs-placement="top"#}
-{#                     title="Delete Tweet">#}
-{#            {% endif %}#}
+                    <div class="d-flex align-items-center">
+                        <a href="/profile/{{ tweet.user.username }}">
+                            <img src="/profile/{{ tweet.user.id }}/profile-pic" class="rounded-circle me-2" width="40" height="40" alt="{{ tweet.user.username }}">
+                        </a>
+                        <h5 class="card-title mb-0">
+                            <a class="user-link" href="/profile/{{ tweet.user.username }}">{{ tweet.user.username }}</a>
+                        </h5>
+                    </div>
+                </div>
+                {% if  tweet.user.id == currentUser %}
+                    <div class="action-buttons d-flex  ">
 
-            <div class="d-flex align-items-center mb-2">
-                <a href="/profile/{{ tweet.user.username }}">
-                    <img src="data:image/jpeg;base64,{{tweet.user.getProfilePicBase64()}}" class="rounded-circle me-2" width="40" height="40" alt="{{ tweet.user.username }}">
-                </a>
-                <h5 class="card-title mb-0"><a class="user-link" href="/profile/{{ tweet.user.username }}">{{ tweet.user.username }}</a></h5>
+                        <img width="20" height="20" src="/img/edit.png" alt="Edit" class="edit-icon mb-2" style="cursor: pointer;"
+                             hx-get="/tweet/{{ tweet.id }}/edit"
+                             hx-target="#tweet-content-{{ tweet.id }}"
+                             hx-swap="innerHTML"
+                             title="Edit Tweet">
+
+                        <img width="20" height="20" src="/img/delete.png" alt="Delete" class="delete-icon " style="cursor: pointer; margin-left: 5px"
+                             hx-get="/tweet/{{ tweet.id }}/confirm-delete"
+                             hx-target="#tweet-content-{{ tweet.id }}"
+                             hx-swap="beforebegin"
+                             title="Delete Tweet">
+                    </div>
+                {% endif %}
             </div>
-            <p class="card-text">{{ tweet.content }}</p>
-            {% if tweet.imageBase64 %}
-                <img src="data:image/jpeg;base64,{{tweet.imageBase64}}" class="img-fluid mb-2" alt="Tweet image" style="border-radius: 20px;">
-            {% endif %}
 
-            <p class="card-text"><small class="text-muted">Posted on {{ tweet.createdAt | date("yyyy-MM-dd HH:mm:ss") }}</small></p>
+            <div id="tweet-content-{{ tweet.id }}">
+                <p class="card-text">{{ tweet.content }}</p>
+                {% if tweet.hasImage %}
+                    <img src="/tweet/{{ tweet.id }}/image" class="img-fluid mb-2" alt="Tweet image" style="border-radius: 20px;">
+                {% endif %}
+                <p class="card-text"><small class="text-muted">Posted on {{ tweet.createdAt | date("yyyy-MM-dd HH:mm") }}</small></p>
+            </div>
+
             <button id="tweet-{{ tweet.id }}" class="btn btn-sm btn-outline-primary like-btn"
                     hx-post="/tweet/{{ tweet.id }}/like"
                     hx-target="this"
@@ -41,37 +60,50 @@
             </button>
             <div class="comments-section mt-3">
                 <h6>Comments:</h6>
-            <div id="comment-list">
-        {% for comment in tweet.Comments %}
+                <div id="comment-list-{{ tweet.id }}">
+                        {% for comment in tweet.Comments %}
                     {% include "./comments.peb" %}
-            {% endfor %}
-
-            </div>
+                {% endfor %}
+                </div>
             </div>
             <form hx-post="/tweet/{{ tweet.id }}/comment"
-                  hx-target="#comment-list"
+                  hx-target="#comment-list-{{ tweet.id }}"
                   hx-swap="beforeend">
-                <input type="text" name="content" class="form-control mb-2"  placeholder="Add a comment" required>
-                <button type="submit" class="btn btn-sm btn-primary" >Comment</button>
+                <input type="text" name="content" class="form-control mb-2" placeholder="Add a comment" required>
+                <button type="submit" class="btn btn-sm btn-primary">Comment</button>
             </form>
         </div>
     </div>
+
     {% endfor %}
-        {% if hasMoreTweets %}
-        <div id="load-more" hx-get="/feed/load-more?offset={{ nextOffset }}"
-             hx-trigger="intersect once"
-             hx-target="#tweet-list"
-             hx-swap="beforeend">
-        </div>
+
+
+    <div id="load-more"
+        {% if forProfile ==true %}
+             hx-get="/profile/{{ userId }}/load-more?offset={{ nextOffset }}&limit=5"
+                {% else %}
+         hx-get="/feed/load-more?offset={{ nextOffset }}& limit=5"
         {% endif %}
-    <div id="delete-confirmation-template" style="display: none;">
-        <div class="alert alert-danger" role="alert">
-            Are you sure you want to delete this tweet? This action cannot be undone.
-            <button type="button" class="btn btn-sm btn-danger float-end" data-tweet-id="">Delete</button>
-            <button type="button" class="btn btn-sm btn-secondary float-end" data-bs-dismiss="alert">Cancel</button>
-        </div>
+         hx-trigger="intersect once"
+         hx-target="#loading-placeholder"
+         hx-swap="outerHTML">
     </div>
+        {% if hasMoreTweets == true  %}
+    <div id="loading-placeholder" style="display: block;">
+        <img src="/img/loading.gif" alt="Loading..." />
+    </div>
+        {% endif  %}
 
     <script>
+            // Set up event listener to populate the tweet ID in the delete form
+            document.addEventListener('DOMContentLoaded', function () {
+                var deleteConfirmModal = document.getElementById('deleteConfirmModal');
+                deleteConfirmModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var tweetId = button.getAttribute('data-tweet-id');
+                    var tweetIdInput = document.getElementById('tweetIdToDelete');
+                    tweetIdInput.value = tweetId;
+                });
+            });
 
-    </script>
+        </script>

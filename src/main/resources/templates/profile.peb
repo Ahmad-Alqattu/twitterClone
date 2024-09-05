@@ -3,7 +3,7 @@
     {% block content %}
     <div class="profile-container">
         <!-- Profile Header (Wallpaper) -->
-        <div class="profile-header" style="background-image: url('data:image/jpeg;base64,{{user.wallpaperPicBase64}}');">
+        <div class="profile-header" style="background-image: url('/profile/{{ user.id }}/wallpaper-pic');">
                 {% if user.id == currentUser %}
                 <label class="change-wallpaper-btn">
                     Change Wallpaper
@@ -15,7 +15,8 @@
         <div class="profile-info-section">
             <div class="profile-info">
                 <div class="profile-pic-container">
-                    <img src="data:image/jpeg;base64,{{user.getProfilePicBase64()}}" alt="{{ user.username }}" class="profile-pic">
+                    <img src="/profile/{{ user.id }}/profile-pic" alt="{{ user.username }}" class="profile-pic">
+
                     {% if user.id == currentUser %}
                         <label class="change-profile-pic-btn" style="background-image: url('/img/changePic.png');">
                         </label>
@@ -68,12 +69,13 @@
         </div>
 
 
-        <!-- Tweets Section -->
-        <div class="tweets-section">
-            <h2>Tweets</h2>
-            {% include "./partials/tweet-list.peb" %}
+        <div class="tweets-section" id="tweet-list"
+             hx-get="/profile/{{ user.id }}/load-more?offset={{ nextOffset }}&limit=5"
+             hx-trigger="load"
+             hx-swap="innerHTML">
+            <!-- Placeholder content can be added here if necessary -->
+            <div class="loading-placeholder">Loading tweets...</div>
         </div>
-        <!-- Update Profile Modal -->
         <!-- Update Profile Modal -->
         <div id="updateProfileModal" class="modal">
             <div class="modal-dialog">
@@ -155,14 +157,7 @@
 
     </div>
         <script>
-        //     document.getElementById("bio-text").style.display = "none";
-        //     document.getElementById("bio-form").style.display = "block";
-        // }
-        //
-        // function cancelBioEdit() {
-        //     document.getElementById("bio-form").style.display = "none";
-        //     document.getElementById("bio-text").style.display = "flex";
-        // }
+
 
         // Get the modal elements
         var profileModal = document.getElementById("updateProfileModal");

@@ -7,22 +7,15 @@
                 <h2 class="mb-4">Your Feed</h2>
                 {% include "./partials/create_tweet.peb" %}
 
-                <div id="tweet-list">
-                        {% include "./partials/tweet-list.peb" %}
+                <div id="tweet-list"
+                     hx-get="/feed/load-more"
+                     hx-trigger="load"
+                     hx-swap="innerHTML">
+                    <!-- Placeholder content can be added here if necessary -->
+                    <div class="loading-placeholder">Loading tweets...</div>
                 </div>
 
-                {% if hasMoreTweets %}
-                   <div class="text-center mt-4">
-                      <button class="btn btn-primary"
-                            style="margin-bottom: 15px;"
-                             hx-get="/feed/load-more?offset={{nextOffset}}"
-                            hx-trigger="click , intersect once,revealed"
-                              hx-target="#tweet-list"
-                               hx-swap="beforeend">
-                           Load More
-                       </button>
-                   </div>
-                {% endif %}
+                <div id="load-more" style="display: none;"></div> <!-- Placeholder for load more functionality -->
             </div>
         </div>
     </div>

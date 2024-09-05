@@ -9,19 +9,19 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class Tweet {
-    public String imageBase64;
     private int id;
     private int userId;
     private String content;
     private LocalDateTime createdAt;
     private User user;
     private int likeCount;
-    private int retweetCount;
     private byte[] ImageData;
+    private int retweetCount;
+    private Boolean hasImage;
     private Boolean likedByMe;
     private Boolean retweetedByMe;
     private List<Comment> Comments;
-    private String retweetedByUser;
+    private String retweetedByUser ;
 
 
 

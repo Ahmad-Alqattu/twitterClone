@@ -24,11 +24,13 @@ public class SearchController {
     private void searchUsers(Context ctx) {
         String query = ctx.queryParam("search");
         List<User> users = userService.searchUsers(query);
-
-        if (users.isEmpty()) {
-            ctx.html("<div class='dropdown-item'>No users found</div>");
-        } else {
-            ctx.render("templates/partials/search_results.peb", Map.of("users", users));
-        }
+            if(!query.trim().isEmpty()) {
+                if (users.isEmpty()) {
+                    ctx.html("<div class='dropdown-item'>No users found</div>");
+                } else {
+                    ctx.render("templates/partials/search_results.peb", Map.of("users", users));
+                }
+            }else
+                ctx.html("<div class='dropdown-item'>search user</div>");
     }
 }

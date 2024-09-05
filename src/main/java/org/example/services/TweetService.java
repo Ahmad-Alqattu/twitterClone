@@ -20,64 +20,29 @@ public class TweetService {
         this.tweetDAO = tweetDAO;
     }
 
-//    public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
-//        List<Tweet> tweets = getTimelineForUser(userId, limit, offset);
-//         tweets.forEach(this::processTweet);
-//        return tweets;
-//    }
-
     public List<Tweet> getTimelineForUser(int userId, int limit, int offset) {
         List<Tweet> originalTweets = tweetDAO.getTweetsForUser(userId, limit, offset);
         List<Tweet> retweets = tweetDAO.getRetweetsForUser(userId, limit, offset);
 
-        // Combine the two lists
         List<Tweet> combinedTweets = new ArrayList<>();
         combinedTweets.addAll(originalTweets);
         combinedTweets.addAll(retweets);
 
-        // Sort combined tweets by creation date
         combinedTweets.sort(Comparator.comparing(Tweet::getCreatedAt).reversed());
 
-        // Limit to final size after combining (if necessary)
         if (combinedTweets.size() > limit) {
-
             combinedTweets = combinedTweets.subList(0, limit);
-            combinedTweets.forEach(this::processTweet);
-
-            return combinedTweets;
-
-        } else {
-            combinedTweets.forEach(this::processTweet);
-            return combinedTweets;
         }
 
+        return combinedTweets;
     }
 
     public Tweet getTweetById(int tweetId, int userId) {
-        Tweet tweet = tweetDAO.getTweetById(tweetId, userId);
-
-        return tweet;
+        return tweetDAO.getTweetById(tweetId, userId);
     }
 
-    public Tweet processTweet(Tweet tweet) {
-        if (tweet.getUser().getProfilePicData() != null) {
-            String profilePicBase64 = Base64.getEncoder().encodeToString(tweet.getUser().getProfilePicData());
-            tweet.getUser().setProfilePicBase64(profilePicBase64);
-        }
-        if (tweet.getImageData() != null) {
-            String tweetBase64 = Base64.getEncoder().encodeToString(tweet.getImageData());
-            tweet.setImageBase64(tweetBase64);
-        }
-        tweet.getComments().forEach(this::processComment);
-        return tweet;
-    }
-
-    public Comment processComment(Comment comment) {
-        if (comment.getUser().getProfilePicData() != null) {
-            String commentProfilePicBase64 = Base64.getEncoder().encodeToString(comment.getUser().getProfilePicData());
-            comment.getUser().setProfilePicBase64(commentProfilePicBase64);
-        }
-        return comment;
+    public byte[] getTweetImageData(int tweetId) {
+        return tweetDAO.getTweetImagData(tweetId);
     }
 
     public Tweet createTweet(int userId, String content, byte[] imageData) {
@@ -113,16 +78,14 @@ public class TweetService {
     }
 
     public Comment addComment(int tweetId, int userId, String content) {
-        Comment c = tweetDAO.addComment(tweetId, userId, content);
-        processComment(c);
-        return c;
+        return tweetDAO.addComment(tweetId, userId, content);
     }
 
     public List<User> getLikers(int tweetId) {
         return tweetDAO.likers(tweetId);
     }
 
-    public List<User> getRetweeters(int tweetId) {
-        return tweetDAO.retweeters(tweetId);
+    public boolean updateTweet(Tweet tweet) {
+        return tweetDAO.updateTweet(tweet);
     }
 }

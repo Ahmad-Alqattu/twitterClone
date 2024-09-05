@@ -12,7 +12,10 @@
 /*h1 {*/
 /*    color: #333;*/
 /*}*/
-.d-flex.align-items-center.mb-2 img {
+.d-flex.align-items-start.mb-2 img {
+    margin-right: 10px; /* Adjust the value as needed */
+}
+ a img {
     margin-right: 10px; /* Adjust the value as needed */
 }
 .profile-container {
@@ -300,19 +303,35 @@ h2 {
     max-width: 80%;
     height: auto;
 }
+#searchForm {
+    position: relative;
+    width: 20%;
 
-/*search*/
+}
+
+@media only screen and (max-width: 768px) {
+    #searchForm {
+        position: relative;
+        width: 70%;
+
+    }
+}
+
 #searchForm .form-control {
-    width: 400px; /* Adjust as needed */
+    width: 100%;
+
 }
 
 #searchResults {
     position: absolute;
-     width: 400px;
-    top: 50px;
-    left: 208px;
-    max-height: 450px; /* Set a max height for scrollable content */
-    overflow-y: auto; /* Enable scrolling */
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 450px;
+    overflow-y: auto;
+    z-index: 9999;
+    background-color: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-item {
@@ -327,5 +346,37 @@ h2 {
 
 .dropdown-item .btn {
     margin-left: auto;
+}
+
+/*comments*/
+.comment {
+    padding: 10px 0; /* Adds padding to the top and bottom of each comment */
+    border-bottom: 1px solid #e9ecef; /* Adds a separation line between comments */
+}
+
+.comment img {
+    margin-top: 5px; /* Aligns the image vertically with the text */
+}
+
+.comment .flex-grow-1 {
+    flex-grow: 1;
+}
+
+.comment p {
+    margin-top: 5px;
+    /* Adds some space between the date and content */
+    margin-bottom: 0; /* Removes default margin from bottom */
+}
+.comment p small{
+    margin-left: 5px;
+}
+.comment .text-muted {
+    margin-bottom: 3px; /* Adds space between date and username */
+}
+
+
+
+.user-link:hover {
+    text-decoration: underline; /* Underline on hover */
 }
 

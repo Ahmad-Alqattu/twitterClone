@@ -40,12 +40,10 @@ public class FeedController {
             return;
         }
 
-        List<Tweet> initialTweets = tweetService.getTimelineForUser(userId, TWEETS_PER_PAGE, 0);
 
         User user = userService.getUserById(Long.valueOf(userId));
         ctx.render("templates/feed.peb", model(
-                "tweets", initialTweets,
-                "hasMoreTweets", initialTweets.size() == TWEETS_PER_PAGE,
+//                "hasMoreTweets", initialTweets.size() == TWEETS_PER_PAGE,
                 "nextOffset", 0,
                 "user", user,
                 "currentUser", userId
@@ -60,7 +58,8 @@ public class FeedController {
         ctx.render("templates/partials/tweet-list.peb", model(
                 "tweets", moreTweets,
                 "hasMoreTweets", moreTweets.size() == TWEETS_PER_PAGE,
-                "nextOffset",nextOffset
+                "nextOffset",nextOffset,
+                "currentUser",userId
         ));
     }
 }

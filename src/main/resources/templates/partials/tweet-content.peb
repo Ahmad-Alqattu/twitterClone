@@ -1,0 +1,7 @@
+<div id="tweet-content-{{ tweet.id }}">
+    <p class="card-text">{{ tweet.content }}</p>
+    {% if tweet.hasImage %}
+        <img src="/tweet/{{ tweet.id }}/image?s" class="img-fluid mb-2 " alt="Tweet image" style="border-radius: 20px;">
+    {% endif %}
+    <p class="card-text"><small class="text-muted">Posted on {{ tweet.createdAt | date("yyyy-MM-dd HH:mm:ss") }}</small></p>
+</div>

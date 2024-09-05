@@ -16,6 +16,25 @@ public class JdbiUserDAO implements UserDAO {
     public JdbiUserDAO(Jdbi jdbi) {
         this.jdbi = jdbi;
     }
+    @Override
+    public byte[] getProfilePicData(int userId) {
+        return jdbi.withHandle(handle ->
+                handle.createQuery("SELECT profile_pic_data FROM users WHERE id = :userId")
+                        .bind("userId", userId)
+                        .mapTo(byte[].class)
+                        .findOnly()
+        );
+    }
+
+    @Override
+    public byte[] getWallpaperPicData(int userId) {
+        return jdbi.withHandle(handle ->
+                handle.createQuery("SELECT wallpaper_pic_data FROM users WHERE id = :userId")
+                        .bind("userId", userId)
+                        .mapTo(byte[].class)
+                        .findOnly()
+        );
+    }
 
     @Override
     public boolean isFollowing(int followerId, int followedId) {
@@ -69,7 +88,7 @@ public class JdbiUserDAO implements UserDAO {
                     return user;
                 })
                 .findOne()
-                .orElseThrow(() -> new IllegalArgumentException("User not found")));
+                .orElseThrow(() ->  new IllegalArgumentException("User not found")));
     }
 
     @Override
@@ -88,7 +107,8 @@ public class JdbiUserDAO implements UserDAO {
     @Override
     public List<User> searchUsers(String query) {
         return jdbi.withHandle(handle ->
-                handle.createQuery("SELECT * FROM users WHERE username ILIKE :query OR email ILIKE :query")
+                handle.createQuery("SELECT id, username, email, bio,password_hash, created_at," +
+                                "                                        profile_pic_data IS NOT NULL AS has_profile_pic FROM users WHERE username ILIKE :query OR email ILIKE :query")
                         .bind("query", "%" + query + "%")
                         .map((rs, ctx) -> {
                             User user = new User();
@@ -96,7 +116,7 @@ public class JdbiUserDAO implements UserDAO {
                             user.setUsername(rs.getString("username"));
                             user.setEmail(rs.getString("email"));
                             user.setPasswordHash(rs.getString("password_hash"));
-                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
                             user.setCreatedAt((rs.getTimestamp("created_at")));
                             user.setBio(rs.getString("bio"));
 
@@ -107,23 +127,30 @@ public class JdbiUserDAO implements UserDAO {
     }
 
     @Override
-    public User getUserById(Long id) {
+    public User getUserById(Long userId) {
         return jdbi.withHandle(handle ->
-                handle.createQuery("SELECT * FROM users WHERE id = :id")
-                        .bind("id", id)
+                handle.createQuery(
+                                "SELECT id, username, email, bio,password_hash, created_at," +
+                                        "profile_pic_data ,profile_pic_data IS NOT NULL AS has_profile_pic, " +  // Boolean to check if profile picture exists
+                                        "wallpaper_pic_data,wallpaper_pic_data IS NOT NULL AS has_wallpaper " +   // Boolean to check if wallpaper exists
+                                        "FROM users WHERE id = :userId")
+                        .bind("userId", userId)
                         .map((rs, ctx) -> {
                             User user = new User();
                             user.setId(rs.getInt("id"));
                             user.setUsername(rs.getString("username"));
                             user.setEmail(rs.getString("email"));
-                            user.setPasswordHash(rs.getString("password_hash"));
                             user.setProfilePicData(rs.getBytes("profile_pic_data"));
                             user.setWallpaperPicData(rs.getBytes("wallpaper_pic_data"));
-                            user.setCreatedAt(rs.getTimestamp("created_at"));
                             user.setBio(rs.getString("bio"));
-
+                            user.setPasswordHash(rs.getString("password_hash"));
+                            user.setCreatedAt(rs.getTimestamp("created_at"));
+                            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));  // Set the boolean field
+                            user.setHasWallpaper(rs.getBoolean("has_wallpaper"));    // Set the boolean field
                             return user;
-                        })                        .one());
+                        })
+                        .findOnly()
+        );
     }
 
 
@@ -141,11 +168,12 @@ public class JdbiUserDAO implements UserDAO {
     }
 
     @Override
-    public List<Tweet> getUserTweets(int userId) {
+    public List<Tweet> getUserTweets(int userId, int offset, int limit) {
         return jdbi.withHandle(handle -> {
             List<Tweet> tweets = handle.createQuery(
-                            "SELECT t.id, t.user_id, t.content, t.image_data, t.created_at, " +
-                                    "u.username, u.profile_pic_data, " +
+                            "SELECT t.id, t.user_id, t.content, t.created_at, " +
+                                    "u.username, " +
+                                    "t.image_data IS NOT NULL AS has_image, " +  // Boolean to check if image exists
                                     "COUNT(DISTINCT l.id) AS like_count, " +
                                     "COUNT(DISTINCT r.id) AS retweet_count, " +
                                     "EXISTS (SELECT 1 FROM likes WHERE tweet_id = t.id AND user_id = :userId) AS liked_by_me, " +
@@ -156,16 +184,18 @@ public class JdbiUserDAO implements UserDAO {
                                     "LEFT JOIN likes l ON t.id = l.tweet_id " +
                                     "LEFT JOIN retweets r ON t.id = r.tweet_id " +
                                     "WHERE t.user_id = :userId OR t.id IN (SELECT tweet_id FROM retweets WHERE user_id = :userId) " +
-                                    "GROUP BY t.id, t.user_id, t.content, t.image_data, t.created_at, u.username, u.profile_pic_data " +
-                                    "ORDER BY t.created_at DESC")
+                                    "GROUP BY t.id, t.user_id, t.content, t.created_at, u.username " +
+                                    "ORDER BY t.created_at DESC, t.id DESC LIMIT :limit OFFSET :offset")
                     .bind("userId", userId)
+                    .bind("offset", offset)
+                    .bind("limit", limit)
                     .map((rs, ctx) -> {
                         Tweet tweet = new Tweet();
                         tweet.setId(rs.getInt("id"));
                         tweet.setUserId(rs.getInt("user_id"));
                         tweet.setContent(rs.getString("content"));
                         tweet.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                        tweet.setImageData(rs.getBytes("image_data"));
+                        tweet.setHasImage(rs.getBoolean("has_image"));  // Set the boolean field
                         tweet.setLikeCount(rs.getInt("like_count"));
                         tweet.setRetweetCount(rs.getInt("retweet_count"));
                         tweet.setLikedByMe(rs.getBoolean("liked_by_me"));
@@ -175,16 +205,17 @@ public class JdbiUserDAO implements UserDAO {
                         User user = new User();
                         user.setId(rs.getInt("user_id"));
                         user.setUsername(rs.getString("username"));
-                        user.setProfilePicData(rs.getBytes("profile_pic_data"));
                         tweet.setUser(user);
 
                         return tweet;
                     })
                     .list();
 
+
             for (Tweet tweet : tweets) {
                 List<Comment> comments = handle.createQuery(
                                 "SELECT c.*, u.username, u.profile_pic_data " +
+                                        "IS NOT NULL AS has_profile_pic " +
                                         "FROM comments c " +
                                         "JOIN users u ON c.user_id = u.id " +
                                         "WHERE c.tweet_id = :tweetId " +
@@ -199,7 +230,7 @@ public class JdbiUserDAO implements UserDAO {
                             User user = new User();
                             user.setId(rs.getInt("user_id"));
                             user.setUsername(rs.getString("username"));
-                            user.setProfilePicData(rs.getBytes("profile_pic_data"));
+                            user.setHasProfilePic(rs.getBoolean("has_profile_pic"));
                             comment.setUser(user);
 
                             return comment;

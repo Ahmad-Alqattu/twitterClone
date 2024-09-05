@@ -17,5 +17,7 @@ public interface UserDAO {
     List<User> searchUsers(String query);
     User getUserById(Long id);
     void updateUserProfile(User user);
-    List<Tweet> getUserTweets(int userId);
+    List<Tweet> getUserTweets(int userId,int offset, int limit);
+    byte[] getProfilePicData(int userId);
+    byte[] getWallpaperPicData(int userId);
 }

@@ -13,15 +13,15 @@ public class User {
     private String username;
     private String email;
     private String passwordHash;
-    private byte[] profilePicData;
-    private String profilePicBase64;
-    private String WallpaperPicBase64;
+    private boolean hasProfilePic;
     private String bio;
-    private byte[] wallpaperPicData;
+    private boolean hasWallpaper;
     private Date createdAt;
     private int followersCount;
     private int followingCount;
 
+    private byte[] wallpaperPicData;
+    private byte[] profilePicData;
 
     public User() {
 

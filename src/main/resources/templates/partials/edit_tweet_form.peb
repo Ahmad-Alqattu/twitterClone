@@ -1,0 +1,62 @@
+    <div class="card-body" style="background-color: #f8f9fa;"> <!-- Light background color -->
+        <form id="edit-tweet-form"
+              hx-post="/tweet/{{ tweet.id }}/update"
+              hx-target="#tweet-content-{{ tweet.id }}"
+              hx-swap="innerHTML"
+              hx-encoding="multipart/form-data">
+            <div class="mb-3">
+        <textarea class="form-control" name="content" placeholder="What's happening?" rows="3"
+                  style="border: none; background-color: #e9ecef;" required>{{ tweet.content }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <input type="file" class="form-control-file" id="changeimageInput" name="image" accept="image/*" style="display: none;">
+                <label for="changeimageInput" class="btn btn-outline-secondary" style="display: block; background-color: #e9ecef; border: 1px solid #ced4da; color: #495057;">
+                        {% if tweet.hasImage %}
+                        Change Photo
+                        {% else %}
+                        Add Photo
+                        {% endif %}
+                </label>
+                {% if tweet.hasImage %}
+                    <div class="mb-3">
+                        <img id="oldimagePreview" src="/tweet/{{ tweet.id }}/image" alt="Image preview" style="max-width: 100%; margin-top: 10px;">
+                    </div>
+                {% endif %}
+                <img id="newImagePreview" src="#" alt="New image preview" style="display: none; max-width: 100%; margin-top: 10px;">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Tweet</button>
+            <button type="button" class="btn btn-secondary"
+                    hx-get="/tweet/{{ tweet.id }}/content"
+                    hx-target="#tweet-content-{{ tweet.id }}"
+                    hx-swap="innerHTML">Cancel</button>        </form>
+
+    </div>
+
+
+<script>
+    document.getElementById('changeimageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const newpreview = document.getElementById('newImagePreview');
+        const preview = document.getElementById('oldimagePreview');
+
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                newpreview.src = e.target.result;
+                newpreview.style.display = 'block';
+                preview.style.display = 'none';
+            }
+
+            reader.readAsDataURL(file);
+        } else {
+            newpreview.src = '#';
+            newpreview.style.display = 'none';
+            preview.style.display = 'block';
+
+        }
+    });
+</script>

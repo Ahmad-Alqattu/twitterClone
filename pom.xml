@@ -7,12 +7,27 @@
     <groupId>org.example</groupId>
     <artifactId>twitterClone</artifactId>
     <version>1.0</version>
+    <packaging>jar</packaging> <!-- Ensure this is set -->
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>org.example.App</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.7.1</version>
+                <version>10.4.1</version>
                 <configuration>
                     <cleanDisabled>false</cleanDisabled>
                     <url>jdbc:postgresql://127.0.0.1:5432/TwitterDB</url>
@@ -60,13 +75,13 @@
     <dependency>
         <groupId>org.flywaydb</groupId>
         <artifactId>flyway-database-postgresql</artifactId>
-        <version>10.7.1</version>
+        <version>10.14.0</version>
     </dependency>
 
     <dependency>
         <groupId>io.javalin</groupId>
         <artifactId>javalin</artifactId>
-        <version>6.1.6</version>
+        <version>6.2.0</version>
     </dependency>
     <!-- JDBI -->
     <dependency>
@@ -150,13 +165,31 @@
     <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>5.10.2</version>
+        <version>5.8.1</version>
         <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
-        <version>5.10.2</version>
+        <version>5.11.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>1.20.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>1.20.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>1.20.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -184,7 +217,19 @@
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.6.0</version> <!-- Use the latest version available -->
+        <version>42.7.3</version> <!-- Use the latest version available -->
+    </dependency>
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.11.0</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.11.0</version>
+        <scope>test</scope>
     </dependency>
 
 </dependencies>
