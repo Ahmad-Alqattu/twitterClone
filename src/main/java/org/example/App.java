@@ -10,9 +10,6 @@ import com.google.inject.Injector;
 import com.typesafe.config.Config;
 import io.javalin.Javalin;
 import org.example.controllers.*;
-import org.example.services.AuthService;
-import org.example.services.TweetService;
-import org.example.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +20,6 @@ public class App {
         try {
             Injector injector = Guice.createInjector(new ConfigModule(), new TwitterModule());
             Config config = injector.getInstance(Config.class);
-            UserService userService = injector.getInstance(UserService.class);
-            TweetService tweetService = injector.getInstance(TweetService.class);
-            AuthService authService = injector.getInstance(AuthService.class);
             logger.info("Configuration loaded: {}", config.toString());
 
 

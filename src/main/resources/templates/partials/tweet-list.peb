@@ -89,7 +89,8 @@
          hx-swap="outerHTML">
     </div>
         {% if hasMoreTweets == true  %}
-    <div id="loading-placeholder" style="display: block;">
+    <div id="loading-placeholder" style="display: block;
+     text-align: center;">
         <img src="/img/loading.gif" alt="Loading..." />
     </div>
         {% endif  %}
