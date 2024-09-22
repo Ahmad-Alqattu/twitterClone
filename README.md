@@ -55,5 +55,4 @@ mvn test
 This will execute the unit and integration  using Selenide.
 
 ## video 
-https://drive.google.com/file/d/14-VCPmgf_71g3x_4bg1oZpbjllmsPw28/view?usp=drive_link
-    
+https://drive.google.com/file/d/1z1ayNebkTmBBF-mMzcKOGHYf-bOAeHNJ/view?usp=sharing
