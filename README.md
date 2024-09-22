@@ -1,5 +1,5 @@
 # Twitter Clone Project
-##### This project is a simple Twitter-like clone built using Java, Javalin web framework, Jdbi for database interactions, Guice for dependency injection, Flyway for database migrations, and PostgreSQL as the database. The frontend is rendered using Pebble templates.
+##### This project is a simple Twitter-like clone built using Java, Javalin web framework, Jdbi for database interactions, Guice for dependency injection, Flyway for database migrations, and PostgreSQL as the database. The front end is rendered using Pebble templates.
 ```bash
 /src
 |-- /main
@@ -52,7 +52,7 @@ The tests use Testcontainers to spin up a PostgreSQL instance in a Docker contai
 ```bash
 mvn test
 ```
-This will execute the unit and integration tests.
+This will execute the unit and integration  using Selenide.
 
-
+https://drive.google.com/file/d/14-VCPmgf_71g3x_4bg1oZpbjllmsPw28/view?usp=drive_link
     
