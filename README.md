@@ -20,6 +20,7 @@
     |-- /java
             |-- UserServiceTest.java
             |-- TweetServiceTest.java
+            |-- addTweetIntegrationTest.java
             |-- TestModule.java
 ```
 
