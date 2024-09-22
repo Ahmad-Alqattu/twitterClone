@@ -36,7 +36,7 @@
                     <li class="nav-item">
                             {% if currentUser != null %}
                             <div class="d-flex align-items-center mb-2">
-                            <a href="/profile/{{ user.username }}">
+                            <a id="userProfileLink" href="/profile/{{ user.username }}">
                                 <img src="/profile/{{ user.id }}/profile-pic" class="rounded-circle me-2"
                                      width="40" height="40" alt="{{ user.username }}">
                             </a>

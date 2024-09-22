@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.util.Date;
 
-// src/main/java/com/twitterclone/models/User.java
 @Data
 @AllArgsConstructor
 public class User {

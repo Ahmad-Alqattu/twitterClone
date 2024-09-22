@@ -9,7 +9,6 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 
 import java.util.List;
-import java.util.Map;
 
 import static io.javalin.rendering.template.TemplateUtil.model;
 

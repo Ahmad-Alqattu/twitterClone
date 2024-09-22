@@ -9,12 +9,9 @@ import com.google.inject.Inject;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import org.example.services.UtilService;
-
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static io.javalin.rendering.template.TemplateUtil.model;
 
 public class TweetController {
     private final TweetService tweetService;
@@ -24,20 +21,6 @@ public class TweetController {
     public TweetController(TweetService tweetService,UtilService utilService) {
         this.tweetService = tweetService;
         this.utilService = utilService;
-    }
-
-    private void createTweet(Context ctx) {
-        Integer userId = ctx.sessionAttribute("userId");
-        if (userId == null) {
-            ctx.status(401).result("Not authenticated");
-            return;
-        }
-
-        String content = ctx.formParam("content");
-        byte[] tweetImage = ctx.uploadedFile("image") != null ? utilService.readUploadedFile(ctx.uploadedFile("image")) : null;
-
-        tweetService.createTweet(userId, content, tweetImage);
-        ctx.redirect("/feed");
     }
 
     public void registerRoutes(Javalin app) {
@@ -52,6 +35,21 @@ public class TweetController {
         app.get("/tweet/{id}/confirm-delete", this::confirmDelete);
         app.delete("/tweet/{id}/delete", this::deleteTweet);
         app.get("/tweet/{id}/image", this::getTweetImage);  // New endpoint for images
+    }
+
+    private void createTweet(Context ctx) {
+        Integer userId = ctx.sessionAttribute("userId");
+        if (userId == null) {
+            ctx.status(401).result("Not authenticated");
+            return;
+        }
+
+        String content = ctx.formParam("content");
+        byte[] tweetImage = ctx.uploadedFile("image").size() > 0 ? utilService.readUploadedFile(ctx.uploadedFile("image")) : null;
+
+        tweetService.createTweet(userId, content, tweetImage);
+        ctx.redirect("/feed");
+
     }
 
     private void getTweetContent(Context ctx) {

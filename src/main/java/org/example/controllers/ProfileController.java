@@ -10,7 +10,6 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import org.example.services.UtilService;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 

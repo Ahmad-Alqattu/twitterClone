@@ -33,4 +33,3 @@ public class Tweet {
 }
 
 
-// Update JdbiTweetDAO to implement the retweet method

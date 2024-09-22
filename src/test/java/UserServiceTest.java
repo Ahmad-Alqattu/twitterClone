@@ -1,46 +1,56 @@
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
-import org.example.dao.UserDAO;
 import org.example.models.User;
 import org.example.services.UserService;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.jdbi.v3.core.Jdbi;
+import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
-
+import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserServiceIntegrationTest {
+@Testcontainers
+public class UserServiceTest {
 
     private UserService userService;
     private static PostgreSQLContainer<?> postgresContainer;
+    private static Injector injector;
+    private  Jdbi jdbi;
+
 
     @BeforeEach
-    void setUp() {
-        // Set up Guice injector with TestModule
-        Injector injector = Guice.createInjector(new TestModule(),new ConfigModule());
+     void setUp() {
+        Injector injector = InjectorManager.getInjector();
         userService = injector.getInstance(UserService.class);
         postgresContainer = injector.getInstance(PostgreSQLContainer.class);
     }
 
     @AfterAll
     static void tearDown() {
-        // Stop the container after all tests
         if (postgresContainer != null) {
             postgresContainer.stop();
         }
     }
-
+    @AfterEach
+    public void deleteUsers() {
+        if (jdbi != null) {
+            jdbi.useHandle(handle -> {
+                handle.execute("TRUNCATE TABLE users CASCADE"); // Drop your table
+            });
+        }
+    }
     @Test
     void testUserCreation() {
-        // Test the creation of a user
+        // arrange
         User newUser = new User();
         newUser.setUsername("testuser");
         newUser.setEmail("testuser@example.com");
         newUser.setPasswordHash("password");
 
+        //act
         userService.SignUp(newUser);
-
+        
+        // assert
         User fetchedUser = userService.findByUsername("testuser");
         assertNotNull(fetchedUser);
         assertEquals("testuser", fetchedUser.getUsername());

@@ -8,7 +8,6 @@ import org.jdbi.v3.core.Jdbi;
 
 import java.util.List;
 
-// src/main/java/com/twitterclone/dao/JdbiUserDAO.java
 public class JdbiUserDAO implements UserDAO {
     private final Jdbi jdbi;
 
@@ -88,7 +87,7 @@ public class JdbiUserDAO implements UserDAO {
                     return user;
                 })
                 .findOne()
-                .orElseThrow(() ->  new IllegalArgumentException("User not found")));
+                .orElse(null));
     }
 
     @Override

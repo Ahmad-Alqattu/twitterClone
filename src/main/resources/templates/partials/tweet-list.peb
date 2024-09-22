@@ -39,7 +39,7 @@
             </div>
 
             <div id="tweet-content-{{ tweet.id }}">
-                <p class="card-text">{{ tweet.content }}</p>
+                <p class="tweet card-text">{{ tweet.content }}</p>
                 {% if tweet.hasImage %}
                     <img src="/tweet/{{ tweet.id }}/image" class="img-fluid mb-2" alt="Tweet image" style="border-radius: 20px;">
                 {% endif %}

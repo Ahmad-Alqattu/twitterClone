@@ -3,9 +3,9 @@
         <form id="create-tweet-form"
               action="/tweet/create" method="post"
               hx-target="#tweet-list"
-              hx-swap="beforeend" enctype="multipart/form-data">
+              hx-swap="befor" enctype="multipart/form-data">
             <div class="mb-3">
-                <textarea class="form-control" name="content" placeholder="What's happening?" rows="3"
+                <textarea id="tweetBox" class="form-control" name="content" placeholder="What's happening?" rows="3"
                           style="border: none; background-color: #e9ecef;" required></textarea> <!-- Remove border and light background -->
             </div>
             <div class="mb-3">
@@ -14,7 +14,7 @@
                 <label for="imageInput" class="btn btn-outline-secondary" style="display: block; background-color: #e9ecef; border: 1px solid #ced4da; color: #495057;">add photo</label>
                 <img id="imagePreview" src="#" alt="Image preview" style="display: none; max-width: 100%; margin-top: 10px;">
             </div>
-            <button type="submit" class="btn btn-primary">Tweet</button>
+            <button id="tweetButton" type="submit" class="btn btn-primary">Tweet</button>
         </form>
     </div>
 </div>
